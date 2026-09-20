@@ -1,0 +1,9 @@
+{
+  "name": "RESET 66",
+  "short_name": "RESET 66",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0b0a",
+  "theme_color": "#0a0b0a",
+  "description": "A 66-day personal reset and habit system."
+}

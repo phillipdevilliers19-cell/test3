@@ -1,0 +1,369 @@
+import React, {useMemo, useState} from "react";
+import {createRoot} from "react-dom/client";
+import {
+  Activity, ArrowRight, BarChart3, CalendarDays, Check, ChevronRight,
+  Flame, HeartPulse, Home, Menu, Plus, RotateCcw, Settings, Sparkles,
+  Target, Trash2, Trophy, X, BookOpen, Droplets, Dumbbell, Moon
+} from "lucide-react";
+import "./styles.css";
+
+const STORAGE = "reset66-v3";
+const achievements = [
+  {id:"start",title:"FIRST STEP",detail:"Start your reset"},
+  {id:"week",title:"7 DAYS",detail:"Reach a 7-day streak"},
+  {id:"fortnight",title:"14 DAYS",detail:"Reach a 14-day streak"},
+  {id:"month",title:"30 DAYS",detail:"Reach a 30-day streak"},
+  {id:"half",title:"HALFWAY",detail:"Reach Day 33"},
+  {id:"finish",title:"RESET COMPLETE",detail:"Reach Day 66"}
+];
+const achievements = [
+  {id:"start",title:"FIRST STEP",detail:"Complete Day 1"},
+  {id:"week",title:"7 DAYS",detail:"Reach a 7-day streak"},
+  {id:"fortnight",title:"14 DAYS",detail:"Reach a 14-day streak"},
+  {id:"month",title:"30 DAYS",detail:"Reach a 30-day streak"},
+  {id:"half",title:"HALFWAY",detail:"Reach Day 33"},
+  {id:"finish",title:"RESET COMPLETE",detail:"Reach Day 66"}
+];
+
+const defaultHabits = [
+  {id:"train", name:"TRAIN", detail:"45 minutes", icon:"dumbbell", color:"lime", required:true},
+  {id:"water", name:"WATER", detail:"2 litres", icon:"droplets", color:"blue", required:true},
+  {id:"read", name:"READ", detail:"20 minutes", icon:"book", color:"purple", required:false},
+  {id:"nutrition", name:"NUTRITION", detail:"No junk food", icon:"heart", color:"amber", required:true},
+];
+
+function iso(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10); }
+function dateDiff(a,b){ return Math.floor((new Date(b)-new Date(a))/86400000); }
+function freshState(){
+  const today=iso(new Date());
+  return {
+    startedAt: today,
+    habits: defaultHabits,
+    completions: {},
+    journals: {},
+    setupDone: false,
+    challengeName: "MY RESET"
+  };
+}
+function load(){
+  try { return {...freshState(), ...JSON.parse(localStorage.getItem(STORAGE)||"{}")}; }
+  catch { return freshState(); }
+}
+function save(s){ localStorage.setItem(STORAGE, JSON.stringify(s)); }
+
+function Icon({name,size=19}){
+  const p={size,strokeWidth:2};
+  if(name==="dumbbell") return <Dumbbell {...p}/>;
+  if(name==="droplets") return <Droplets {...p}/>;
+  if(name==="book") return <BookOpen {...p}/>;
+  if(name==="heart") return <HeartPulse {...p}/>;
+  return <Target {...p}/>;
+}
+
+function App(){
+  const [state,setState]=useState(load);
+  const [tab,setTab]=useState("home");
+  const [selectedDate,setSelectedDate]=useState(iso(new Date()));
+  const [celebrate,setCelebrate]=useState(false);
+  const [reviewOpen,setReviewOpen]=useState(false);
+  const [selectedDate,setSelectedDate]=useState(iso(new Date()));
+  const [showAdd,setShowAdd]=useState(false);
+  const [menu,setMenu]=useState(false);
+  const [journal,setJournal]=useState(state.journals[iso(new Date())]||{mood:4,energy:8,good:"",better:""});
+  const today=iso(new Date());
+  const day=Math.min(66, Math.max(1, dateDiff(state.startedAt,today)+1));
+  const dayKey=today;
+  const doneIds=state.completions[dayKey]||[];
+  const completed=doneIds.length;
+  const progress=Math.round((day/66)*100);
+  const required=state.habits.filter(h=>h.required);
+  const requiredDone=required.filter(h=>doneIds.includes(h.id)).length;
+  const todayPct=state.habits.length?Math.round(completed/state.habits.length*100):0;
+
+  const streak=useMemo(()=>{
+    let n=0, d=new Date();
+    for(let i=0;i<66;i++){
+      const k=iso(d);
+      const arr=state.completions[k]||[];
+      const req=state.habits.filter(h=>h.required);
+      if(req.length && req.every(h=>arr.includes(h.id))){ n++; d.setDate(d.getDate()-1); }
+      else break;
+    }
+    return n;
+  },[state]);
+
+  function mutate(fn){
+    setState(prev=>{const next=fn({...prev}); save(next); return next;});
+  }
+  function toggle(id){
+    mutate(s=>{
+      const arr=new Set(s.completions[dayKey]||[]);
+      arr.has(id)?arr.delete(id):arr.add(id);
+      s.completions[dayKey]=[...arr]; return s;
+    });
+  }
+  function finishDay(){
+    const missing=state.habits.filter(h=>!doneIds.includes(h.id));
+    if(missing.length) alert(`You still have ${missing.length} habit${missing.length>1?"s":""} left today.`);
+    else { setCelebrate(true); setTimeout(()=>setCelebrate(false),2400); }
+  }
+  function restart(){
+    if(confirm("Start a new 66-day reset? Your current history will be cleared.")){
+      const s=freshState(); s.setupDone=true; save(s); setState(s); setTab("home");
+    }
+  }
+  function addHabit(h){
+    mutate(s=>{s.habits.push({...h,id:crypto.randomUUID()}); return s;});
+    setShowAdd(false);
+  }
+  function removeHabit(id){
+    mutate(s=>({...s,habits:s.habits.filter(h=>h.id!==id)}));
+  }
+  function editDate(k){
+    setSelectedDate(k);
+    setTab("journal");
+    setJournal(state.journals[k]||{mood:4,energy:8,good:"",better:""});
+  }
+
+  function editDate(k){
+    setSelectedDate(k);
+    setTab("journal");
+    setJournal(state.journals[k]||{mood:4,energy:8,good:"",better:""});
+  }
+  function openReview(){setReviewOpen(true)}
+  function saveJournal(){
+    mutate(s=>({...s,journals:{...s.journals,[today]:journal}}));
+    alert("Journal saved.");
+  }
+
+  if(!state.setupDone) return <Setup onStart={(name)=>mutate(s=>({...s,challengeName:name||"MY RESET",setupDone:true}))}/>;
+
+  return <div className="app">
+    <header className="topbar">
+      <button className="brand" onClick={()=>setTab("home")}>RESET<span>66</span></button>
+      <button className="iconBtn" onClick={()=>setMenu(!menu)}><Menu/></button>
+    </header>
+
+    {menu && <div className="menuPanel">
+      <div className="menuTitle">SETTINGS</div>
+      <button onClick={restart}><RotateCcw/> Restart 66-day reset</button>
+      <div className="menuNote">Your data is stored locally in this browser.</div>
+    </div>}
+
+    <main>
+      {tab==="home" && <Home state={state} day={day} progress={progress} completed={completed}
+        streak={streak} todayPct={todayPct} toggle={toggle} finishDay={finishDay}
+        requiredDone={requiredDone} required={required}/>}
+      {tab==="habits" && <Habits state={state} toggle={toggle} doneIds={doneIds}
+        onAdd={()=>setShowAdd(true)} onRemove={removeHabit}/>}
+      {tab==="progress" && <Progress state={state} day={day} streak={streak} editDate={editDate}/>}
+      {tab==="journal" && <Journal journal={journal} setJournal={setJournal} save={saveJournal}/>}
+    </main>
+
+    <nav className="bottomNav">
+      <Nav active={tab==="home"} label="HOME" icon={<Home/>} onClick={()=>setTab("home")}/>
+      <Nav active={tab==="habits"} label="HABITS" icon={<Target/>} onClick={()=>setTab("habits")}/>
+      <Nav active={tab==="progress"} label="PROGRESS" icon={<BarChart3/>} onClick={()=>setTab("progress")}/>
+      <Nav active={tab==="journal"} label="JOURNAL" icon={<BookOpen/>} onClick={()=>setTab("journal")}/>
+    </nav>
+
+    {showAdd && <AddHabit onClose={()=>setShowAdd(false)} onAdd={addHabit}/>}
+  </div>
+}
+
+function Nav({active,label,icon,onClick}){return <button className={active?"nav active":"nav"} onClick={onClick}>{icon}<span>{label}</span></button>}
+
+function Setup({onStart}){
+  const [name,setName]=useState("MY RESET");
+  return <div className="setup">
+    <div className="setupGlow"/>
+    <div className="setupLogo">RESET<span>66</span></div>
+    <div className="eyebrow">THE 66-DAY RESET</div>
+    <h1>66 DAYS.<br/><em>ONE RESET.</em></h1>
+    <p>Build your daily system. Show up. Track the work. Finish what you started.</p>
+    <label className="fieldLabel">NAME YOUR RESET</label>
+    <input value={name} onChange={e=>setName(e.target.value)} />
+    <button className="primary big" onClick={()=>onStart(name)}>START DAY 1 <ArrowRight/></button>
+    <small>Everything stays on this device. No account required.</small>
+  </div>
+}
+
+function Home({state,day,progress,completed,streak,todayPct,toggle,finishDay,requiredDone,required}){
+  const date=new Date();
+  const circumference=2*Math.PI*86;
+  const offset=circumference-(progress/100)*circumference;
+  return <section className="page">
+    <div className="heroHead">
+      <div><div className="eyebrow">{date.toLocaleDateString(undefined,{weekday:"long"}).toUpperCase()}</div>
+      <div className="dateText">{date.toLocaleDateString(undefined,{day:"numeric",month:"long"})}</div></div>
+      <div className="streak"><Flame/><b>{streak}</b><span>STREAK</span></div>
+    </div>
+
+    <div className="heroCard">
+      <div className="heroCopy"><span className="eyebrow">YOUR RESET</span><h1>DAY <strong>{day}</strong></h1>
+      <p>{66-day} DAYS TO GO</p></div>
+      <div className="ring">
+        <svg viewBox="0 0 200 200"><circle className="ringTrack" cx="100" cy="100" r="86"/>
+        <circle className="ringValue" cx="100" cy="100" r="86" strokeDasharray={circumference} strokeDashoffset={offset}/></svg>
+        <div><b>{progress}%</b><span>COMPLETE</span></div>
+      </div>
+    </div>
+
+    <div className="sectionTitle"><span>TODAY</span><b>{completed}/{state.habits.length}</b></div>
+    <div className="habitList">
+      {state.habits.map(h=><HabitRow key={h.id} h={h} checked={(state.completions[iso(new Date())]||[]).includes(h.id)} onClick={()=>toggle(h.id)}/>)}
+    </div>
+    <div className="todayStats">
+      <div><span>DAILY SCORE</span><b>{todayPct}%</b></div>
+      <div><span>REQUIRED</span><b>{requiredDone}/{required.length}</b></div>
+    </div>
+    <button className="primary finish" onClick={finishDay}>FINISH TODAY <Check/></button>
+
+    <div className="quote"><Sparkles/><div><b>SHOW UP.</b><span>Motivation follows action.</span></div></div><button className="secondary weeklyBtn" onClick={openReview}><BarChart3/> WEEKLY REVIEW</button>
+  </section>
+}
+
+function HabitRow({h,checked,onClick}){
+  return <button className={"habitRow "+(checked?"checked":"")} onClick={onClick}>
+    <div className={"habitIcon "+h.color}><Icon name={h.icon}/></div>
+    <div className="habitText"><b>{h.name}</b><span>{h.detail}</span></div>
+    <div className="check">{checked?<Check/>:null}</div>
+  </button>
+}
+
+function Habits({state,toggle,doneIds,onAdd,onRemove}){
+  return <section className="page">
+    <PageHead title="HABITS" kicker="YOUR DAILY SYSTEM" sub="The behaviours that define your reset."/>
+    <div className="habitList">
+      {state.habits.map(h=><div className="habitManage" key={h.id}>
+        <HabitRow h={h} checked={doneIds.includes(h.id)} onClick={()=>toggle(h.id)}/>
+        <button className="deleteBtn" onClick={()=>onRemove(h.id)}><Trash2/></button>
+      </div>)}
+    </div>
+    <button className="secondary addBtn" onClick={onAdd}><Plus/> ADD HABIT</button>
+    <div className="tipCard"><Target/><div><b>Make it measurable.</b><span>Specific habits are easier to complete and track.</span></div></div>
+  </section>
+}
+
+function Progress({state,day,streak,editDate}){
+  const total=state.habits.length*day;
+  const done=Object.values(state.completions).flat().length;
+  const consistency=total?Math.round(done/total*100):0;
+  const cells=[];
+  for(let i=0;i<66;i++){
+    const d=new Date(state.startedAt); d.setDate(d.getDate()+i);
+    const k=iso(d), arr=state.completions[k]||[];
+    const req=state.habits.filter(h=>h.required);
+    const ok=i<day && req.length && req.every(h=>arr.includes(h.id));
+    const partial=i<day && arr.length;
+    cells.push(<button onClick={()=>editDate(k)} key={i} className={"dayCell "+(ok?"done ":"")+(partial&&!ok?"partial ":"")+(i===day-1?"current":"")} title={`Day ${i+1}`}>{i+1}</button>);
+  }
+  return <section className="page">
+    <PageHead title="PROGRESS" kicker="YOUR 66-DAY RECORD" sub="Consistency beats intensity."/>
+    <div className="metricGrid">
+      <Metric value={`${Math.round(day/66*100)}%`} label="RESET" icon={<Activity/>}/>
+      <Metric value={`${streak}`} label="STREAK" icon={<Flame/>}/>
+      <Metric value={`${consistency}%`} label="CONSISTENCY" icon={<Target/>}/>
+    </div>
+    <div className="card">
+      <div className="cardHead"><b>HABIT PERFORMANCE</b><span>{day} days</span></div>
+      {state.habits.map(h=>{
+        const n=Object.values(state.completions).filter(a=>a.includes(h.id)).length;
+        const pct=day?Math.round(n/day*100):0;
+        return <div className="barRow" key={h.id}><span>{h.name}</span><div><i style={{width:`${Math.min(100,pct)}%`}}/></div><b>{pct}%</b></div>
+      })}
+    </div>
+    <div className="card">
+      <div className="cardHead"><b>ACHIEVEMENTS</b><Trophy/></div>
+      <div className="achievementGrid">
+        {achievements.map(a=>{
+          const unlocked =
+            (a.id==="start" && day>=1) ||
+            (a.id==="week" && streak>=7) ||
+            (a.id==="fortnight" && streak>=14) ||
+            (a.id==="month" && streak>=30) ||
+            (a.id==="half" && day>=33) ||
+            (a.id==="finish" && day>=66);
+          return <div className={"achievement "+(unlocked?"unlocked":"")} key={a.id}>
+            <div className="achievementIcon"><Trophy/></div>
+            <b>{a.title}</b><span>{a.detail}</span>
+          </div>
+        })}
+      </div>
+    </div>
+    <div className="card">
+      <div className="cardHead"><b>66-DAY CALENDAR</b><CalendarDays/></div>
+      <div className="calendar">{cells}</div>
+      <div className="legend"><span><i className="lg doneLg"/>Complete</span><span><i className="lg partialLg"/>Partial</span><span><i className="lg"/>Upcoming</span></div>
+    </div>
+  </section>
+}
+function Metric({value,label,icon}){return <div className="metric"><div>{icon}</div><b>{value}</b><span>{label}</span></div>}
+
+function Journal({journal,setJournal,save}){
+  return <section className="page">
+    <PageHead title="JOURNAL" kicker="DAILY REFLECTION" sub="Capture the day. Learn from the pattern."/>
+    <div className="card">
+      <div className="cardHead"><b>HOW WAS TODAY?</b><span>MOOD</span></div>
+      <div className="moods">{["😫","😐","🙂","😄","🔥"].map((m,i)=><button className={journal.mood===i+1?"selected":""} onClick={()=>setJournal({...journal,mood:i+1})} key={m}>{m}</button>)}</div>
+    </div>
+    <div className="card">
+      <div className="cardHead"><b>ENERGY</b><strong>{journal.energy}/10</strong></div>
+      <input className="range" type="range" min="1" max="10" value={journal.energy} onChange={e=>setJournal({...journal,energy:+e.target.value})}/>
+    </div>
+    <label className="textareaLabel">WHAT WENT WELL?</label>
+    <textarea value={journal.good} onChange={e=>setJournal({...journal,good:e.target.value})} placeholder="Write it down..."/>
+    <label className="textareaLabel">WHAT COULD BE BETTER?</label>
+    <textarea value={journal.better} onChange={e=>setJournal({...journal,better:e.target.value})} placeholder="Be honest..."/>
+    <button className="primary finish" onClick={save}>SAVE JOURNAL <Check/></button>
+  </section>
+}
+
+function AddHabit({onClose,onAdd}){
+  const [name,setName]=useState("");
+  const [detail,setDetail]=useState("");
+  const [required,setRequired]=useState(false);
+  const [icon,setIcon]=useState("target");
+  const [color,setColor]=useState("lime");
+  return <div className="modalBack"><div className="modal">
+    <div className="modalHead"><b>BUILD A HABIT</b><button onClick={onClose}><X/></button></div>
+    <label>HABIT NAME</label>
+    <input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. WALK"/>
+    <label>TARGET</label>
+    <input value={detail} onChange={e=>setDetail(e.target.value)} placeholder="e.g. 8,000 steps"/>
+    <label>ICON</label>
+    <div className="choiceRow">
+      {["target","dumbbell","droplets","book","heart"].map(x=>
+        <button className={icon===x?"choice selected":"choice"} onClick={()=>setIcon(x)} key={x}><Icon name={x}/></button>
+      )}
+    </div>
+    <label>ACCENT</label>
+    <div className="choiceRow">
+      {["lime","blue","purple","amber"].map(x=>
+        <button className={"colorChoice "+x+(color===x?" selected":"")} onClick={()=>setColor(x)} key={x}/>
+      )}
+    </div>
+    <button className={"toggle "+(required?"on":"")} onClick={()=>setRequired(!required)}><span/>REQUIRED FOR DAY COMPLETION</button>
+    <button className="primary" disabled={!name.trim()} onClick={()=>onAdd({name:name.toUpperCase(),detail:detail||"Daily",icon,color,required})}>ADD HABIT <Plus/></button>
+  </div></div>
+}
+
+
+function Celebration({day}){
+  return <div className="celebrate"><div className="celebrateBurst"><Check/></div><div className="eyebrow">DAY {day}</div><h2>DONE.</h2><p>You showed up today.</p><div className="celebrateLine"/></div>
+}
+function WeeklyReview({state,streak,onClose}){
+  let done=0;
+  for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);const a=state.completions[iso(d)]||[];const req=state.habits.filter(h=>h.required);if(req.length&&req.every(h=>a.includes(h.id)))done++}
+  const score=Math.round(done/7*100);
+  const message=score>=85?"Strong week. Protect the routine and keep the standard high.":score>=60?"Momentum is building. Simplify the habit that keeps breaking.":"Adjust the system. Make the next week easier to win, not harder to start.";
+  return <div className="modalBack"><div className="modal reviewModal">
+    <div className="modalHead"><b>WEEKLY REVIEW</b><button onClick={onClose}><X/></button></div>
+    <div className="reviewHero"><span>THIS WEEK</span><b>{score}%</b><small>required-day completion</small></div>
+    <div className="reviewRow"><span>CURRENT STREAK</span><b>{streak} days</b></div>
+    <div className="reviewRow"><span>PRINCIPLE</span><b>Consistency &gt; perfection</b></div>
+    <p className="reviewText">{message}</p>
+    <button className="primary" onClick={onClose}>BACK TO RESET <ArrowRight/></button>
+  </div></div>
+}
+createRoot(document.getElementById("root")).render(<App/>);
