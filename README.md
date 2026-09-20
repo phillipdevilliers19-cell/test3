@@ -1,52 +1,18 @@
-# RESET 66
+# RESET 66 — Arcade Edition
 
-**66 DAYS. ONE RESET.**
-
-A mobile-first 66-day habit reset app built with React and Vite.
+A mobile-first 66-day habit game built with React + Vite.
 
 ## Included
-
-- 66-day reset engine
-- Daily habit checklist
-- Required-habit completion
-- Streak tracking
-- 66-day progress calendar
-- Habit performance statistics
-- Achievements
-- Daily journal with mood and energy tracking
-- Weekly review
-- Add/remove/customise habits
-- Restart/reset function
-- Local browser storage — no account or backend required
-- Responsive mobile/desktop interface
+- Game-style 66-day journey map, XP, levels, streaks, checkpoints and achievements
+- Habit groups with unlimited sub-missions
+- Per-mission target, time and reminder settings
+- Local-first progress storage with automatic migration from the previous RESET 66 data model
+- PWA manifest
+- Browser notifications when permission is granted and RESET 66 is active
 - GitHub Pages deployment workflow
 
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-## Build
-
-```bash
-npm run build
-```
+## Important notification note
+The UI includes reminder scheduling and browser notifications. Reliable push delivery while the app is completely closed requires a cloud push service/server; this package intentionally does not invent credentials for one.
 
 ## GitHub Pages
-
-This package includes `.github/workflows/deploy.yml`.
-
-1. Upload the contents of this package to the **root of your GitHub repository**.
-2. In GitHub open **Settings → Pages**.
-3. Set **Source** to **GitHub Actions**.
-4. Push/commit to the `main` branch, or manually run **Deploy RESET 66** from Actions.
-5. For the `phillipdevilliers19-cell/test3` repository the site is:
-   `https://phillipdevilliers19-cell.github.io/test3/`
-
-The Vite configuration uses a relative base so the build works from a repository sub-path.
-
-## Data
-
-Your habits, completions and journal entries are stored in `localStorage` on the device/browser. Clearing browser site data will clear the app data.
+Set Pages source to **GitHub Actions**. Push to `main` and the included workflow builds and deploys the Vite app.
