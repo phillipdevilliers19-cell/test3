@@ -1,6 +1,6 @@
 import React,{useMemo,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {Activity,ArrowRight,BarChart3,CalendarDays,Check,Flame,HeartPulse,Home,Menu,Plus,RotateCcw,Sparkles,Target,Trash2,Trophy,X,BookOpen,Droplets,Dumbbell} from 'lucide-react';
+import {Activity,ArrowRight,BarChart3,CalendarDays,Check,Flame,HeartPulse,Home as HomeIcon,Menu,Plus,RotateCcw,Sparkles,Target,Trash2,Trophy,X,BookOpen,Droplets,Dumbbell} from 'lucide-react';
 import './styles.css';
 
 const STORAGE='reset66-v3';
@@ -48,7 +48,7 @@ function App(){
    {tab==='progress'&&<Progress state={state} day={day} streak={streak} editDate={editDate}/>} 
    {tab==='journal'&&<Journal date={selectedDate} initial={journal} save={saveJournal}/>} 
   </main>
-  <nav className="bottomNav"><Nav active={tab==='home'} label="HOME" icon={<Home/>} onClick={()=>setTab('home')}/><Nav active={tab==='habits'} label="HABITS" icon={<Target/>} onClick={()=>setTab('habits')}/><Nav active={tab==='progress'} label="PROGRESS" icon={<BarChart3/>} onClick={()=>setTab('progress')}/><Nav active={tab==='journal'} label="JOURNAL" icon={<BookOpen/>} onClick={()=>setTab('journal')}/></nav>
+  <nav className="bottomNav"><Nav active={tab==='home'} label="HOME" icon={<HomeIcon/>} onClick={()=>setTab('home')}/><Nav active={tab==='habits'} label="HABITS" icon={<Target/>} onClick={()=>setTab('habits')}/><Nav active={tab==='progress'} label="PROGRESS" icon={<BarChart3/>} onClick={()=>setTab('progress')}/><Nav active={tab==='journal'} label="JOURNAL" icon={<BookOpen/>} onClick={()=>setTab('journal')}/></nav>
   {showAdd&&<AddHabit onClose={()=>setShowAdd(false)} onAdd={addHabit}/>} {reviewOpen&&<WeeklyReview state={state} streak={streak} onClose={()=>setReviewOpen(false)}/>} {celebrate&&<Celebration day={day}/>} 
  </div>
 }
