@@ -30,3 +30,23 @@ button{font-family:inherit;cursor:pointer}
 @media(max-width:1050px){.sideRail{width:82px;padding:16px 9px}.gameViewport{margin-left:82px}.sideBrand{justify-content:center}.sideBrand>div:last-child,.railPlayer>div:last-child,.railQuote,.railSettings{display:none}.railNav .nav{justify-content:center;padding:0}.railNav .nav span{display:none}.railNav .nav svg{width:20px}.dashboardGrid{grid-template-columns:minmax(0,1fr) 250px;grid-template-areas:"player player" "hero today" "missions reward"}.arcadeMissionGrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){.sideRail{display:none}.gameViewport{margin-left:0}.topbar{height:58px;padding:0 12px;justify-content:space-between}.mobileBrand{display:flex;align-items:center;gap:6px;font-weight:1000;font-size:18px;letter-spacing:-.06em}.mobileBrand span{color:var(--lime)}.topStats>span{min-width:45px;padding:4px 6px;grid-template-columns:12px 1fr}.topStats>span svg{width:12px}.topStats>span em{display:none}.topbar .iconBtn{display:grid;width:35px;height:35px}.page.gamePage{padding:18px 10px 120px}.dashboardHead{align-items:start}.dashboardHead h1{font-size:28px}.headActions{display:none}.dashboardGrid{grid-template-columns:1fr;grid-template-areas:"player" "hero" "today" "missions" "reward"}.playerCardTop{grid-template-columns:auto 1fr}.bigStats{grid-column:1/-1;border-top:1px solid #26383e;padding-top:8px}.bigStats>div{flex:1}.promoCard{display:none}.journeyHero{min-height:400px}.heroNode span{width:30px;height:30px}.heroNode.current span{width:40px;height:40px}.heroNode b{font-size:5px}.heroCaption{left:15px;bottom:16px}.heroCaption b{font-size:27px}.heroBadge{right:12px;bottom:14px}.arcadeMissionGrid{grid-template-columns:1fr}.missionCard.deluxe{min-height:0}.arcadeDock{grid-template-columns:repeat(5,1fr);gap:4px;border-radius:12px;padding:6px;position:sticky;bottom:70px;z-index:19}.arcadeDock button{height:62px;border-radius:9px}.arcadeDock b{font-size:6px}.arcadeDock small{display:none}.arcadeDock svg{width:19px}.quote{margin-bottom:4px}}
 @media(max-width:430px){.topStats{gap:0}.topStats>span{min-width:40px}.playerCardTop{gap:9px}.playerAvatar{width:51px;height:51px}.playerCardIdentity b{font-size:15px}.bigStats b{font-size:17px}.journeyHero{min-height:370px}.heroPath{bottom:19%}.heroCaption span{font-size:6px}.heroCaption b{font-size:24px}.todayPanel{padding:13px}.scoreRing{width:155px;height:155px}.arcadeDock{bottom:68px}.arcadeDock button{height:58px}.arcadeDock b{font-size:5.5px}}
+
+/* ===== JOURNEY HERO FINAL CORRECTION ===== */
+.journeyHero{min-height:520px}
+.journeyArt{background:linear-gradient(180deg,#07131c18 0%,#07131c10 45%,#05090b78 100%),url('./quest-art.jpg') center/cover no-repeat}
+.heroMist{background:linear-gradient(180deg,transparent 35%,#030708a8 100%),radial-gradient(ellipse at 42% 48%,#d8ff7220,transparent 38%)}
+.heroMoon{display:none}
+.journeyArt .mountain{display:none}
+.heroTrail{left:9%;right:9%;bottom:29%;height:4px;transform:rotate(-10deg);background:#34444a}
+.heroPath{left:6%;right:6%;bottom:0;height:100%;transform:none;pointer-events:none}
+.heroNode{bottom:auto!important;transform:translateX(-50%);gap:5px;z-index:4}
+.heroNode span{width:42px;height:42px;background:#071014e8;border:2px solid #5d6b70;box-shadow:0 5px 0 #020405,0 0 16px #000b}
+.heroNode.on span{background:#18240d;border-color:var(--lime);color:var(--lime);box-shadow:0 0 24px #c7ff3566,0 5px 0 #24370b}
+.heroNode.current span{width:54px;height:54px;background:var(--lime);color:#071006;border-color:#f2ffc5;box-shadow:0 0 35px #c7ff35aa,0 5px 0 #5b7c1b}
+.heroNode b{font-size:7px;padding:4px 7px;background:#061014e8;border:1px solid #25383e;box-shadow:0 4px 10px #0008;letter-spacing:.1em}
+.heroNode.current b{color:#071006;background:var(--lime);border-color:#f0ffc0}
+.heroCaption{left:24px;bottom:22px;z-index:6}
+.heroCaption b{font-size:38px}
+.heroBadge{right:20px;bottom:20px;z-index:6}
+.heroBadge b{color:var(--lime)}
+@media(max-width:760px){.journeyHero{min-height:430px}.heroTrail{bottom:31%}.heroNode span{width:32px;height:32px}.heroNode.current span{width:43px;height:43px}.heroNode b{font-size:5px;padding:3px 5px}.heroCaption{left:14px;bottom:15px}.heroCaption b{font-size:28px}.heroBadge{right:12px;bottom:14px}}
