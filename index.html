@@ -129,9 +129,12 @@
         <form id="oemReferenceForm">
           <div class="two-col">
             <label>Application name<input id="oemAppName" required placeholder="e.g. Vertical Turbine Pump"></label>
-            <label>Industry<select id="oemIndustry" required></select></label>
+            <label>Industry<select id="oemIndustry" required><option value="">Select industry</option></select></label>
           </div>
-          <label>Web link <span class="optional">optional</span><input id="oemUrl" type="url" placeholder="https://www.oem.com/application"></label>
+          <div class="two-col">
+            <label>OEM / Manufacturer <span class="optional">optional</span><input id="oemManufacturer" placeholder="e.g. Flowserve, Sulzer, SKF"></label>
+            <label>Web link <span class="optional">optional</span><input id="oemUrl" type="url" placeholder="https://www.oem.com/application"></label>
+          </div>
           <label class="file-button oem-pdf-button">Attach PDF <span class="optional">optional</span><input id="oemPdf" type="file" accept="application/pdf,.pdf"></label>
           <div class="oem-selected-file" id="oemSelectedFile">No PDF attached.</div>
           <label>Notes <span class="optional">optional</span><textarea id="oemNotes" rows="3" placeholder="What is this reference useful for?"></textarea></label>
