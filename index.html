@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>AVA Internal</title>
-  <link rel="stylesheet" href="style.css?v=42">
+  <link rel="stylesheet" href="style.css?v=43">
 </head>
 <body>
 <div class="app-shell">
@@ -290,7 +290,7 @@
   </nav>
 </div>
 <div id="qrModal" class="modal-backdrop hidden"><div class="qr-modal"><button class="modal-close floating-close" id="closeQrModal">×</button><div class="eyebrow">VI APPLICATION QR</div><h2 id="qrTitle">Application</h2><p id="qrSubtitle">Scan to open this application directly in Vesco Intelligence.</p><div id="qrCode" class="qr-code-box"></div><div class="qr-url" id="qrUrl"></div><div class="qr-actions"><button class="secondary" id="copyQrUrl" type="button">Copy link</button><button class="primary" id="downloadQr" type="button">Download QR</button></div><p class="qr-note">Use this on drawings, samples, internal documents or customer-facing material. The QR opens the application record in Vesco Intelligence.</p></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=42"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=43"></script>
 
 
 <script>
@@ -375,6 +375,44 @@
     var menu=document.getElementById('moreMenu');
     if(menu && !e.target.closest('#moreMenu') && !e.target.closest('#moreNav')){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');}
   });
+})();
+</script>
+
+<script>
+/* V43 — protected topbar controls. These handlers intentionally sit outside app.js
+   so the three global controls still work if another optional feature throws. */
+(function(){
+  function page(id){
+    document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('active',p.id===id);});
+    document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active',b.dataset.page===id);});
+    window.scrollTo(0,0);
+    if(id==='backup'){
+      var exportBtn=document.getElementById('exportData');
+      if(exportBtn) exportBtn.focus({preventScroll:true});
+    }
+  }
+  function setTheme(theme){
+    var dark=theme==='dark';
+    document.body.classList.toggle('dark-theme',dark);
+    document.documentElement.dataset.theme=dark?'dark':'light';
+    try{localStorage.setItem('ava_internal_theme_v1',dark?'dark':'light')}catch(e){}
+    var b=document.getElementById('themeToggle');
+    if(b){b.textContent=dark?'☀':'☾';b.title=dark?'Switch to light theme':'Switch to dark theme';b.setAttribute('aria-label',b.title);}
+    var meta=document.getElementById('themeColorMeta');
+    if(meta)meta.setAttribute('content',dark?'#071018':'#ffffff');
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    var theme=document.getElementById('themeToggle');
+    var logo=document.getElementById('avaHomeLogo');
+    var backup=document.getElementById('backupBtn');
+    if(theme){
+      theme.onclick=function(e){e.preventDefault();e.stopPropagation();setTheme(document.body.classList.contains('dark-theme')?'light':'dark');};
+      theme.onpointerup=function(e){if(e.pointerType!=='mouse'){e.preventDefault();theme.click();}};
+    }
+    if(logo){logo.onclick=function(e){e.preventDefault();e.stopPropagation();page('home');};}
+    if(backup){backup.onclick=function(e){e.preventDefault();e.stopPropagation();page('backup');};}
+    try{setTheme(localStorage.getItem('ava_internal_theme_v1')==='dark'?'dark':'light');}catch(e){setTheme('light');}
+  },{once:true});
 })();
 </script>
 </body>

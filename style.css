@@ -449,3 +449,9 @@ label{color:#536164}label input,label select,label textarea{border:1px solid #cf
   }
   .topbar-actions .icon-btn{width:40px !important;height:40px !important;flex-basis:40px !important}
 }
+
+/* V43 — ensure global header controls are always above page content */
+.topbar{isolation:isolate !important;z-index:2000 !important;}
+.ava-home-logo{z-index:2002 !important;pointer-events:auto !important;}
+.topbar-actions{z-index:2003 !important;pointer-events:auto !important;}
+.topbar-actions .icon-btn{z-index:2004 !important;pointer-events:auto !important;}
