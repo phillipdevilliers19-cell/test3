@@ -15,7 +15,20 @@
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="manifest" href="manifest.json">
   <title>AVA Internal</title>
-  <link rel="stylesheet" href="style.css?v=56">
+  <link rel="stylesheet" href="style.css?v=57">
+<script>
+(function(){
+  try {
+    var h=location.hostname, p=location.pathname;
+    if(h==='phillipdevilliers19-cell.github.io' && (p==='/test' || p==='/test/index.html')) {
+      if(p!=='/test/' || !location.search.includes('app_version=57')) {
+        var target='/test/?app_version=57'+location.hash;
+        if(location.replace) location.replace(target);
+      }
+    }
+  } catch(e) {}
+})();
+</script>
 </head>
 <body>
 <div class="app-shell">
@@ -298,7 +311,7 @@
   </nav>
 </div>
 <div id="qrModal" class="modal-backdrop hidden"><div class="qr-modal"><button class="modal-close floating-close" id="closeQrModal">×</button><div class="eyebrow">VI APPLICATION QR</div><h2 id="qrTitle">Application</h2><p id="qrSubtitle">Scan to open this application directly in Vesco Intelligence.</p><div id="qrCode" class="qr-code-box"></div><div class="qr-url" id="qrUrl"></div><div class="qr-actions"><button class="secondary" id="copyQrUrl" type="button">Copy link</button><button class="primary" id="downloadQr" type="button">Download QR</button></div><p class="qr-note">Use this on drawings, samples, internal documents or customer-facing material. The QR opens the application record in Vesco Intelligence.</p></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="core.js?v=56"></script><script src="app.js?v=56"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="core.js?v=57"></script><script src="app.js?v=57"></script>
 
 
 

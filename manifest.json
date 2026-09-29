@@ -1,8 +1,8 @@
 {
   "name": "Vesco Intelligence",
   "short_name": "Vesco Intelligence",
-  "start_url": "https://phillipdevilliers19-cell.github.io/test/",
-  "scope": "https://phillipdevilliers19-cell.github.io/test/",
+  "start_url": "/test/?app_version=57",
+  "scope": "/test/",
   "display": "standalone",
   "background_color": "#626365",
   "theme_color": "#626365",
@@ -19,5 +19,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "id": "/test/"
 }
