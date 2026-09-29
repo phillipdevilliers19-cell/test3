@@ -12,35 +12,7 @@ const KNOWLEDGE = [
   {title:"Marine Applications",type:"Official",desc:"Marine bearing applications, material comparison and case studies.",url:"https://www.vesconite.com/industry/marine/"},
   {title:"Hydro Case Studies",type:"Official",desc:"Hydro bearing applications and performance information.",url:"https://www.vesconite.com/hydro/case-studies/"}
 ];
-// v40 — Theme preference
-const THEME_KEY = "ava_internal_theme_v1";
-function applyTheme(theme){
-  const dark = theme !== "light";
-  document.body.classList.toggle("dark-theme", dark);
-  document.documentElement.dataset.theme = dark ? "dark" : "light";
-  const btn = document.getElementById("themeToggle");
-  if(btn){
-    btn.textContent = dark ? "☀" : "☾";
-    btn.title = dark ? "Switch to light theme" : "Switch to dark theme";
-    btn.setAttribute("aria-label", btn.title);
-  }
-  const meta = document.getElementById("themeColorMeta");
-  if(meta) meta.setAttribute("content", dark ? "#071018" : "#ffffff");
-}
-function initTheme(){
-  let saved = "light";
-  try{ saved = localStorage.getItem(THEME_KEY) || "light"; }catch(e){}
-  applyTheme(saved === "dark" ? "dark" : "light");
-}
-
-// Initialise the theme before the remainder of the app so a later feature error
-// cannot prevent the theme control from appearing or working.
-if(document.readyState === "loading"){
-  document.addEventListener("DOMContentLoaded", initTheme, {once:true});
-}else{
-  initTheme();
-}
-
+// V47 Core bridge: global header/theme controls are isolated in core.js.
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const getApps=()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{return[]}};
@@ -76,6 +48,22 @@ const ROLE_DEFAULTS = {
 function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
 function getRoles(){let r=readJson(ROLES_KEY,null);if(!r||typeof r!=='object'||Array.isArray(r)){r=JSON.parse(JSON.stringify(ROLE_DEFAULTS));localStorage.setItem(ROLES_KEY,JSON.stringify(r));}return r}
 function saveRoles(r){localStorage.setItem(ROLES_KEY,JSON.stringify(r))}
+async function saveOemReferenceFromForm(e){
+  e.preventDefault();
+  if(!requirePermission('oem.create')) return;
+  const form=e.currentTarget;
+  const name=$('#oemAppName').value.trim(), industry=$('#oemIndustry').value, manufacturer=$('#oemManufacturer').value.trim(), url=$('#oemUrl').value.trim(), notes=$('#oemNotes').value.trim(), pdf=$('#oemPdf')?.files?.[0]||null;
+  if(!name){alert('Application name is required.');$('#oemAppName').focus();return}
+  if(!industry){alert('Please select an industry.');$('#oemIndustry').focus();return}
+  if(!url&&!pdf){alert('Attach a PDF or add a web link.');return}
+  if(url){try{new URL(url)}catch{alert('Please enter a valid web link.');return}}
+  const id=crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const ref={id,date:new Date().toISOString(),name,industry,manufacturer,url,notes,pdfName:pdf?.name||'',pdfType:pdf?.type||'application/pdf',pdfSize:pdf?.size||0,pdfStored:false};
+  saveOemRefs([ref,...getOemRefs()]);
+  if(pdf){try{await putOemPdf(id,pdf);saveOemRefs(getOemRefs().map(x=>x.id===id?{...x,pdfStored:true}:x))}catch(err){console.warn('OEM PDF storage unavailable; metadata saved.',err)}}
+  form.reset();$('#oemSelectedFile').textContent='No PDF attached.';renderOemReferences();alert('OEM reference saved.');
+}
+
 function normalizeAccess(){
   const defaults=JSON.parse(JSON.stringify(ROLE_DEFAULTS));
   let roles=readJson(ROLES_KEY,null);
@@ -86,6 +74,7 @@ function normalizeAccess(){
   if(!Array.isArray(users)||!users.length){users=[{id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),name:'Administrator',email:'admin@vesconite.com',role:'Super Admin',active:true,createdAt:new Date().toISOString()}];localStorage.setItem(USERS_KEY,JSON.stringify(users));}
   users=users.map(u=>({...u,role:roles[u.role]?u.role:'Viewer',active:u.active!==false}));
   if(!users.some(u=>u.active)) users[0].active=true;
+  if(!users.some(u=>u.active&&u.role==='Super Admin')) users[0]={...users[0],active:true,role:'Super Admin'};
   localStorage.setItem(USERS_KEY,JSON.stringify(users));
   const current=localStorage.getItem(CURRENT_USER_KEY);
   if(!users.some(u=>u.id===current&&u.active)) localStorage.setItem(CURRENT_USER_KEY,users.find(u=>u.active).id);
@@ -98,8 +87,8 @@ function requirePermission(permission){const u=currentUser();const allowed=!!u&&
 function requireAnyPermission(permissions){const u=currentUser(),allowed=getRoles()[u?.role]||[];if(u?.active&&permissions.some(p=>allowed.includes(p)))return true;alert('You do not have permission to use this function.');return false}
 function applyPermissionUI(){const u=currentUser(),role=u?.role,allowed=getRoles()[role]||[];$$('[data-permission]').forEach(el=>{const ok=allowed.includes(el.dataset.permission);el.classList.toggle('hidden',!ok);el.setAttribute('aria-hidden',String(!ok))});$$('[data-permission-any]').forEach(el=>{const perms=String(el.dataset.permissionAny||'').split(',').map(x=>x.trim()).filter(Boolean);const ok=perms.some(p=>allowed.includes(p));el.classList.toggle('hidden',!ok);el.setAttribute('aria-hidden',String(!ok))})}
 
-function showPage(id){normalizeAccess();const pagePerm={"scraper":['scrape'],"oem-references":['oem.view'],"visualiser":['visualiser.view'],"admin":['users.manage','industries.manage','data.export','data.import'],"add-app":['applications.create'],"knowledge":['knowledge.view'],"backup":['data.export','data.import']}[id];if(pagePerm&&!requireAnyPermission(pagePerm))return;$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===id || (id==='app-detail'&&b.dataset.page==='library')));window.scrollTo({top:0,behavior:'smooth'});if(id==='knowledge')renderKnowledge();if(id==='discover')renderDiscover();if(id==='oem-references'){fillOemIndustrySelects();renderOemReferences();}}
-document.getElementById('avaHomeLogo')?.addEventListener('click',()=>showPage('home'));
+window.addEventListener('vi:navigate',e=>{const id=e.detail;if(id&&typeof showPage==='function')showPage(id)});
+function showPage(id){normalizeAccess();const pagePerm={"scraper":['scrape'],"oem-references":['oem.view'],"visualiser":['visualiser.view'],"admin":['users.manage','industries.manage','data.export','data.import'],"add-app":['applications.create'],"knowledge":['knowledge.view'],"backup":['data.export','data.import']}[id];if(pagePerm&&!requireAnyPermission(pagePerm))return;$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===id || (id==='app-detail'&&b.dataset.page==='library')));window.scrollTo({top:0,behavior:'smooth'});if(id==='knowledge')renderKnowledge();if(id==='discover')renderDiscover();if(id==='oem-references'){fillOemIndustrySelects();renderOemReferences();}if(id==='visualiser')renderVisualiser();if(id==='admin')renderAdmin();applyPermissionUI();}
 let selectedOemPdf=null;
 function fillOemIndustrySelects(){
   const select=$('#oemIndustry');
@@ -123,7 +112,7 @@ function renderLibraryChips(){const box=$('#libraryChips');if(!box)return;const 
 $('#librarySearch').oninput=renderLibrary;$('#industryFilter').onchange=renderLibrary;$('#productFilter').onchange=renderLibrary;$('#qualityFilter').onchange=renderLibrary;
 $('#oemReferenceSearch').oninput=renderOemReferences;$('#oemReferenceIndustryFilter').onchange=renderOemReferences;$('#closeOemDetail')?.addEventListener('click',()=>$('#oemDetailModal')?.classList.add('hidden'));$('#oemDetailModal')?.addEventListener('click',e=>{if(e.target.id==='oemDetailModal')e.currentTarget.classList.add('hidden')});
 $('#oemPdf')?.addEventListener('change',e=>{selectedOemPdf=e.target.files?.[0]||null;$('#oemSelectedFile').textContent=selectedOemPdf?`${selectedOemPdf.name} · ${(selectedOemPdf.size/1024/1024).toFixed(2)} MB`:'No PDF attached.';});
-// v35: OEM form save is handled by an isolated inline handler in index.html.
+// OEM form save is handled by the unified OEM handler in app.js.
 let pendingPhotos=[];
 function compressImage(file,maxSide=1800,quality=.82){return new Promise((resolve,reject)=>{const r=new FileReader();r.onerror=reject;r.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);resolve({src:c.toDataURL('image/jpeg',quality),caption:file.name.replace(/\.[^.]+$/,'')})};img.src=r.result}})}
 function renderPendingPhotos(){const box=$('#photoPreview');if(!box)return;box.classList.toggle('hidden',!pendingPhotos.length);box.innerHTML=pendingPhotos.map((p,i)=>`<div class="photo-edit-card"><img src="${p.src}" alt=""><div class="photo-edit-controls"><input data-photo-caption="${i}" value="${esc(p.caption||'')}" placeholder="Photo caption"><button type="button" class="secondary small-btn" data-remove-photo="${i}">Remove</button></div></div>`).join('');$$('[data-photo-caption]').forEach(i=>i.oninput=()=>pendingPhotos[+i.dataset.photoCaption].caption=i.value);$$('[data-remove-photo]').forEach(b=>b.onclick=()=>{pendingPhotos.splice(+b.dataset.removePhoto,1);renderPendingPhotos()});}
@@ -170,7 +159,6 @@ function openQueryApplication(){const id=new URLSearchParams(window.location.sea
 
 // Edit form population
 function initEditIndustry(){const el=$('#editIndustry');if(!el)return;el.innerHTML=getIndustries().map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('')}
-$('#backupBtn').onclick=()=>showPage('backup');
 $('#exportData').onclick=()=>{if(!requirePermission('data.export'))return;const payload={version:2,applications:getApps(),industries:getIndustries()};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.download='ava-internal-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('#importData').onchange=async e=>{if(!requirePermission('data.import')){e.target.value='';return}const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(Array.isArray(data))saveApps(data);else{if(Array.isArray(data.applications))saveApps(data.applications);if(Array.isArray(data.industries))saveIndustries(data.industries);}fillIndustrySelects();fillProductFilter();alert('Backup imported.')}catch{alert('Could not read this backup file.')}};
 $('#clearData').onclick=()=>{if(!requirePermission('applications.delete'))return;if(confirm('Delete all local application records? This cannot be undone unless you have a backup.')){localStorage.removeItem(STORAGE_KEY);updateStats();renderLibrary();renderDiscover();renderVisualiser();showPage('library')}};
@@ -264,6 +252,7 @@ async function buildScrapeResult(base,photos){
 async function runUrlScrape(){const url=$('#scrapeUrl').value.trim();if(!/^https?:\/\//i.test(url)){alert('Enter a full http:// or https:// URL.');return}setScrapeBusy(true,'Fetching source…','Reading the webpage or PDF.');$('#scrapeResult').classList.add('hidden');try{const src=await fetchUrlSource(url);let base,photos=[];if(src.type==='pdf'){base=await extractPdf(src.blob,url);photos=base.photos}else{const parsed=src.type==='html'?htmlToScrape(new DOMParser().parseFromString(src.html,'text/html'),url):markdownToScrape(src.markdown,url);base={...parsed,url,sourceType:'Web URL'};photos=await Promise.all(parsed.images.slice(0,10).map(async(x,i)=>({src:await imageToDataUrl(x),caption:`Web photo ${i+1}`})))}await buildScrapeResult(base,photos)}catch(err){alert(`VI could not extract this source. ${err.message||'Try downloading the PDF and uploading it instead.'}`)}finally{setScrapeBusy(false)}}
 async function runPdfScrape(){if(!scraperPdfFile)return;setScrapeBusy(true,'Opening PDF…','Extracting text and application pages.');$('#scrapeResult').classList.add('hidden');try{const base=await extractPdf(scraperPdfFile);await buildScrapeResult(base,base.photos)}catch(err){alert(`Could not read this PDF. ${err.message||''}`)}finally{setScrapeBusy(false)}}
 function addScrapedApplication(){if(!scraperExtracted)return;const a={...scraperExtracted,id:crypto.randomUUID(),name:$('#scrapeName').value.trim()||'Imported application',industry:$('#scrapeIndustry').value,product:$('#scrapeProduct').value.trim(),description:$('#scrapeDescription').value.trim(),customer:$('#scrapeCustomer').value.trim(),original:$('#scrapeOriginal').value.trim(),why:$('#scrapeWhy').value.trim(),environment:$('#scrapeEnvironment').value.trim(),problem:$('#scrapeProblem').value.trim(),solution:$('#scrapeSolution').value.trim(),proof:$('#scrapeProof').value.trim(),tags:$('#scrapeTags').value.trim(),photos:scraperExtracted.photos||[],photo:scraperExtracted.photos?.[0]?.src||'',date:new Date().toISOString(),author:'VI Scraper'};const apps=getApps();apps.push(a);if(!saveApps(apps))return;fillIndustrySelects();fillProductFilter();scraperExtracted=null;scraperPdfFile=null;$('#scrapeResult').classList.add('hidden');$('#scrapeUrl').value='';$('#scrapePdf').value='';$('#scrapePdfName').textContent='Choose a PDF above';$('#runPdfScrape').disabled=true;showPage('library');openDetail(a.id);}
+$('#oemReferenceForm')?.addEventListener('submit',saveOemReferenceFromForm);
 $('#scrapeUrlMode')?.addEventListener('click',()=>{$('#scrapeUrlPanel').classList.remove('hidden');$('#scrapePdfPanel').classList.add('hidden');$('#scrapeUrl').focus()});
 $('#scrapePdf')?.addEventListener('change',e=>{scraperPdfFile=e.target.files[0]||null;$('#scrapePdfPanel').classList.remove('hidden');$('#scrapeUrlPanel').classList.add('hidden');$('#scrapePdfName').textContent=scraperPdfFile?scraperPdfFile.name:'Choose a PDF above';$('#scrapePdfStatus').textContent=scraperPdfFile?'Ready to extract text, images and application details.':'VI will read the text and render useful PDF pages as application photos.';$('#runPdfScrape').disabled=!scraperPdfFile});
 $('#runUrlScrape')?.addEventListener('click',()=>{if(requirePermission('scrape'))runUrlScrape()});$('#runPdfScrape')?.addEventListener('click',()=>{if(requirePermission('scrape'))runPdfScrape()});
@@ -319,8 +308,8 @@ async function adminExport(){
 }
 $('#adminAddIndustry')?.addEventListener('click',()=>{if(!requirePermission('industries.manage'))return;const v=$('#adminNewIndustry').value.trim();if(!v)return;if(getIndustries().some(i=>i.toLowerCase()===v.toLowerCase())){alert('That industry already exists.');return}saveIndustries([...getIndustries(),v]);$('#adminNewIndustry').value='';fillIndustrySelects();fillOemIndustrySelects();renderAdmin()});
 $('#adminExport')?.addEventListener('click',async()=>{if(!requirePermission('data.export'))return;const b=$('#adminExport');const old=b.textContent;b.disabled=true;b.textContent='Preparing backup…';try{await adminExport()}finally{b.disabled=false;b.textContent=old}});
-$('#adminImport')?.addEventListener('change',async e=>{if(!requirePermission('data.import')){e.target.value='';return}const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(Array.isArray(d)){if(!saveApps(d))throw new Error('Application data could not be stored')}else{if(Array.isArray(d.applications)&&!saveApps(d.applications))throw new Error('Application data could not be stored');if(Array.isArray(d.industries))saveIndustries(d.industries);if(Array.isArray(d.oemReferences))saveOemRefs(d.oemReferences);if(Array.isArray(d.users))saveUsers(d.users);if(d.roles&&typeof d.roles==='object')saveRoles(d.roles);if(Array.isArray(d.oemPdfs)){for(const item of d.oemPdfs){const blob=dataUrlToBlob(item.data);if(blob)try{await putOemPdf(item.id,blob)}catch(err){console.warn('Could not restore OEM PDF',item.id,err)}}}}fillIndustrySelects();fillProductFilter();fillOemIndustrySelects();normalizeAccess();renderAdmin();renderOemReferences();applyPermissionUI();alert('VI backup imported. OEM PDFs included in the backup were restored when browser storage allowed it.')}catch(err){console.error(err);alert(`Could not import that backup. ${err.message||''}`.trim())}finally{e.target.value=''}});
-$('#adminExportOem')?.addEventListener('click',async()=>{if(!requirePermission('data.export'))return;const refs=getOemRefs(),pdfs=await collectOemPdfBackups(refs);const payload={version:2,exportedAt:new Date().toISOString(),references:refs,pdfs};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.download='vi-oem-references.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});
+$('#adminImport')?.addEventListener('change',async e=>{if(!requirePermission('data.import')){e.target.value='';return}const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(Array.isArray(d)){if(!saveApps(d))throw new Error('Application data could not be stored');fillIndustrySelects();fillProductFilter();renderLibrary();renderDiscover();alert('Application backup imported.');return}if(!d||typeof d!=='object')throw new Error('Backup format is invalid.');const apps=Array.isArray(d.applications)?d.applications:null;const inds=Array.isArray(d.industries)?d.industries:null;const refs=Array.isArray(d.oemReferences)?d.oemReferences:(Array.isArray(d.references)?d.references:null);const pdfs=Array.isArray(d.oemPdfs)?d.oemPdfs:(Array.isArray(d.pdfs)?d.pdfs:null);if(apps&&!saveApps(apps))throw new Error('Application data could not be stored');if(inds)saveIndustries(inds);if(refs)saveOemRefs(refs);if(Array.isArray(d.users)){const users=d.users.filter(u=>u&&u.id&&u.name&&u.role).map(u=>({...u,active:u.active!==false}));if(users.length)saveUsers(users)}if(d.roles&&typeof d.roles==='object'&&!Array.isArray(d.roles))saveRoles(d.roles);if(pdfs){for(const item of pdfs){if(!item?.id||!item?.data)continue;const blob=dataUrlToBlob(item.data);if(blob)try{await putOemPdf(item.id,blob)}catch(err){console.warn('Could not restore OEM PDF',item.id,err)}}}normalizeAccess();fillIndustrySelects();fillProductFilter();fillOemIndustrySelects();renderAdmin();renderOemReferences();applyPermissionUI();alert('Backup imported. OEM PDFs were restored when browser storage allowed it.')}catch(err){console.error(err);alert(`Could not import that backup. ${err.message||''}`.trim())}finally{e.target.value=''}});
+$('#adminExportOem')?.addEventListener('click',async()=>{if(!requirePermission('data.export'))return;const refs=getOemRefs(),pdfs=await collectOemPdfBackups(refs);const payload={version:5,type:'vi-oem-references',exportedAt:new Date().toISOString(),oemReferences:refs,oemPdfs:pdfs};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.download='vi-oem-references.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});
 $('#adminClearApps')?.addEventListener('click',()=>{if(!requirePermission('applications.delete'))return;if(confirm('Delete ALL local application records? This cannot be undone without a backup.')){localStorage.removeItem(STORAGE_KEY);updateStats();renderLibrary();renderDiscover();renderVisualiser();renderAdmin();alert('Application library cleared.')}});
 $('#adminAddUser')?.addEventListener('click',()=>{if(!requirePermission('users.manage'))return;const name=$('#adminUserName').value.trim(),email=$('#adminUserEmail').value.trim(),role=$('#adminUserRole').value;if(!name||!email){alert('Enter a name and email.');return}if(role==='Super Admin'&&currentUser()?.role!=='Super Admin'){alert('Only a Super Admin can assign the Super Admin role.');return}const users=getUsers();if(users.some(u=>u.email.toLowerCase()===email.toLowerCase())){alert('A user with that email already exists.');return}users.push({id:crypto.randomUUID(),name,email,role,active:true,createdAt:new Date().toISOString()});saveUsers(users);$('#adminUserName').value='';$('#adminUserEmail').value='';renderAdmin()});
 $('#adminCurrentUser')?.addEventListener('change',e=>{if(!requirePermission('users.manage'))return;localStorage.setItem(CURRENT_USER_KEY,e.target.value);applyPermissionUI();renderAdmin()});
@@ -329,6 +318,6 @@ $('#adminResetRole')?.addEventListener('click',()=>{if(!requirePermission('users
 $('#adminSaveRole')?.addEventListener('click',()=>{if(!requirePermission('users.manage'))return;const r=$('#adminRoleSelect').value,roles=getRoles();if(r==='Super Admin'&&currentUser()?.role!=='Super Admin'){alert('Only a Super Admin can modify the Super Admin role.');return}roles[r]=$$('[data-permission-check]:checked').map(x=>x.dataset.permissionCheck);saveRoles(roles);renderRolePermissions(r);applyPermissionUI();alert(`${r} permissions saved.`)});
 $('#adminAddRole')?.addEventListener('click',()=>{if(!requirePermission('users.manage'))return;const name=$('#adminNewRole').value.trim();if(!name)return;const roles=getRoles();if(roles[name]){alert('That role already exists.');return}roles[name]=[];saveRoles(roles);$('#adminNewRole').value='';renderAdmin();$('#adminRoleSelect').value=name;renderRolePermissions(name)});
 
-const oldShowPage=showPage;showPage=function(id){normalizeAccess();oldShowPage(id);if(id==='visualiser')renderVisualiser();if(id==='admin')renderAdmin();applyPermissionUI()};
+initCoreControls();
 normalizeAccess();renderVisualiser();renderAdmin();applyPermissionUI();
 

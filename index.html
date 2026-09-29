@@ -6,14 +6,21 @@
   <meta name="theme-color" content="#ffffff" id="themeColorMeta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Vesco Intelligence">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="manifest" href="manifest.json">
   <title>AVA Internal</title>
-  <link rel="stylesheet" href="style.css?v=43">
+  <link rel="stylesheet" href="style.css?v=51">
 </head>
 <body>
 <div class="app-shell">
   <header class="topbar">
     <button class="ava-home-logo" id="avaHomeLogo" type="button" aria-label="Vesconite AVA home">
-      <img src="ava-logo.svg" alt="Vesconite AVA">
+      <img src="vesco-intelligence-logo.png" alt="Vesco Intelligence">
     </button>
     <div class="topbar-actions"><button class="icon-btn" id="themeToggle" type="button" title="Toggle dark theme" aria-label="Toggle dark theme">☾</button><button class="icon-btn" id="backupBtn" title="Backup / restore">↥</button></div>
   </header>
@@ -290,130 +297,10 @@
   </nav>
 </div>
 <div id="qrModal" class="modal-backdrop hidden"><div class="qr-modal"><button class="modal-close floating-close" id="closeQrModal">×</button><div class="eyebrow">VI APPLICATION QR</div><h2 id="qrTitle">Application</h2><p id="qrSubtitle">Scan to open this application directly in Vesco Intelligence.</p><div id="qrCode" class="qr-code-box"></div><div class="qr-url" id="qrUrl"></div><div class="qr-actions"><button class="secondary" id="copyQrUrl" type="button">Copy link</button><button class="primary" id="downloadQr" type="button">Download QR</button></div><p class="qr-note">Use this on drawings, samples, internal documents or customer-facing material. The QR opens the application record in Vesco Intelligence.</p></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=44"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="core.js?v=51"></script><script src="app.js?v=51"></script>
 
 
-<script>
-/* VI v39: OEM reference save is intentionally isolated from the main app runtime. */
-(function(){
-  var form=document.getElementById('oemReferenceForm');
-  if(!form) return;
-  form.addEventListener('submit', async function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      var name=(document.getElementById('oemAppName').value||'').trim();
-      var industry=document.getElementById('oemIndustry').value||'';
-      var manufacturer=(document.getElementById('oemManufacturer').value||'').trim();
-      var url=(document.getElementById('oemUrl').value||'').trim();
-      var notes=(document.getElementById('oemNotes').value||'').trim();
-      var pdfInput=document.getElementById('oemPdf');
-      var pdf=pdfInput && pdfInput.files && pdfInput.files[0] ? pdfInput.files[0] : null;
-      if(!name){alert('Application name is required.');return;}
-      if(!industry){alert('Please select an industry.');document.getElementById('oemIndustry').focus();return;}
-      if(!url && !pdf){alert('Attach a PDF or add a web link.');return;}
-      if(url){try{new URL(url);}catch(err){alert('Please enter a valid web link.');return;}}
-      var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(16).slice(2);
-      var ref={id:id,date:new Date().toISOString(),name:name,industry:industry,manufacturer:manufacturer,url:url,notes:notes,pdfName:pdf?pdf.name:'',pdfType:pdf?(pdf.type||'application/pdf'):'application/pdf',pdfSize:pdf?pdf.size:0,pdfStored:false};
-      var refs=[];
-      try{refs=JSON.parse(localStorage.getItem('ava_internal_oem_public_refs_v1')||'[]');if(!Array.isArray(refs))refs=[];}catch(err){refs=[];}
-      refs.unshift(ref);
-      localStorage.setItem('ava_internal_oem_public_refs_v1',JSON.stringify(refs));
-      if(pdf){
-        try{
-          var db=await new Promise(function(resolve,reject){var r=indexedDB.open('ava_internal_oem_refs_db_v1',1);r.onupgradeneeded=function(){if(!r.result.objectStoreNames.contains('pdfs'))r.result.createObjectStore('pdfs')};r.onsuccess=function(){resolve(r.result)};r.onerror=function(){reject(r.error)}});
-          await new Promise(function(resolve,reject){var tx=db.transaction('pdfs','readwrite');tx.objectStore('pdfs').put(pdf,id);tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close();ref.pdfStored=true;var savedRefs=JSON.parse(localStorage.getItem('ava_internal_oem_public_refs_v1')||'[]');var savedRef=savedRefs.find(function(x){return x.id===id});if(savedRef){savedRef.pdfStored=true;localStorage.setItem('ava_internal_oem_public_refs_v1',JSON.stringify(savedRefs));}
-        }catch(pdfErr){console.warn('PDF storage unavailable; reference metadata was still saved.',pdfErr);}
-      }
-      form.reset();
-      document.getElementById('oemSelectedFile').textContent='No PDF attached.';
-      if(typeof window.renderOemReferences==='function') window.renderOemReferences();
-      else {
-        var box=document.getElementById('oemReferenceList');
-        if(box) box.innerHTML='<div class="empty-state"><strong>Saved.</strong><p>'+ref.name.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+' · '+ref.industry+'</p></div>';
-      }
-      alert('OEM reference saved.');
-    } catch(err) {
-      console.error('OEM save failed',err);
-      alert('The OEM reference could not be saved. The form has not been cleared.');
-    }
-  }, true);
-})();
-</script>
-<script>
-(function(){
-  function viNavigate(id){
-    try {
-      if(typeof window.showPage === 'function'){ window.showPage(id); }
-      else {
-        document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('active',p.id===id);});
-        document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active',b.dataset.page===id);});
-        window.scrollTo(0,0);
-      }
-    } catch(err) {
-      document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('active',p.id===id);});
-      document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active',b.dataset.page===id);});
-      window.scrollTo(0,0);
-    }
-  }
-  document.querySelectorAll('[data-page]').forEach(function(btn){
-    btn.addEventListener('click',function(e){
-      if(btn.closest('#moreMenu') && btn.dataset.permission && btn.classList.contains('hidden')) return;
-      e.preventDefault();
-      var menu=document.getElementById('moreMenu');
-      if(menu){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');}
-      viNavigate(btn.dataset.page);
-    });
-  });
-  var more=document.getElementById('moreNav');
-  if(more) more.addEventListener('click',function(e){
-    e.preventDefault(); e.stopPropagation();
-    var menu=document.getElementById('moreMenu');
-    if(menu){menu.classList.toggle('open');menu.setAttribute('aria-hidden',String(!menu.classList.contains('open')));}
-  });
-  document.addEventListener('click',function(e){
-    var menu=document.getElementById('moreMenu');
-    if(menu && !e.target.closest('#moreMenu') && !e.target.closest('#moreNav')){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');}
-  });
-})();
-</script>
 
-<script>
-/* V43 — protected topbar controls. These handlers intentionally sit outside app.js
-   so the three global controls still work if another optional feature throws. */
-(function(){
-  function page(id){
-    document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('active',p.id===id);});
-    document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active',b.dataset.page===id);});
-    window.scrollTo(0,0);
-    if(id==='backup'){
-      var exportBtn=document.getElementById('exportData');
-      if(exportBtn) exportBtn.focus({preventScroll:true});
-    }
-  }
-  function setTheme(theme){
-    var dark=theme==='dark';
-    document.body.classList.toggle('dark-theme',dark);
-    document.documentElement.dataset.theme=dark?'dark':'light';
-    try{localStorage.setItem('ava_internal_theme_v1',dark?'dark':'light')}catch(e){}
-    var b=document.getElementById('themeToggle');
-    if(b){b.textContent=dark?'☀':'☾';b.title=dark?'Switch to light theme':'Switch to dark theme';b.setAttribute('aria-label',b.title);}
-    var meta=document.getElementById('themeColorMeta');
-    if(meta)meta.setAttribute('content',dark?'#071018':'#ffffff');
-  }
-  document.addEventListener('DOMContentLoaded',function(){
-    var theme=document.getElementById('themeToggle');
-    var logo=document.getElementById('avaHomeLogo');
-    var backup=document.getElementById('backupBtn');
-    if(theme){
-      theme.onclick=function(e){e.preventDefault();e.stopPropagation();setTheme(document.body.classList.contains('dark-theme')?'light':'dark');};
-    }
-    if(logo){logo.onclick=function(e){e.preventDefault();e.stopPropagation();page('home');};}
-    if(backup){backup.onclick=function(e){e.preventDefault();e.stopPropagation();page('backup');};}
-    try{setTheme(localStorage.getItem('ava_internal_theme_v1')==='dark'?'dark':'light');}catch(e){setTheme('light');}
-  },{once:true});
-})();
-</script>
 </body>
 </html>
 
