@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#071018" id="themeColorMeta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>AVA Internal</title>
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="style.css?v=40">
 </head>
 <body>
 <div class="app-shell">
@@ -15,7 +15,7 @@
     <button class="ava-home-logo" id="avaHomeLogo" type="button" aria-label="Vesconite AVA home">
       <img src="ava-logo.svg" alt="Vesconite AVA">
     </button>
-    <button class="icon-btn" id="backupBtn" title="Backup / restore">↥</button>
+    <div class="topbar-actions"><button class="icon-btn" id="themeToggle" type="button" title="Toggle dark theme" aria-label="Toggle dark theme">☾</button><button class="icon-btn" id="backupBtn" title="Backup / restore">↥</button></div>
   </header>
 
   <main>
@@ -290,11 +290,11 @@
   </nav>
 </div>
 <div id="qrModal" class="modal-backdrop hidden"><div class="qr-modal"><button class="modal-close floating-close" id="closeQrModal">×</button><div class="eyebrow">VI APPLICATION QR</div><h2 id="qrTitle">Application</h2><p id="qrSubtitle">Scan to open this application directly in Vesco Intelligence.</p><div id="qrCode" class="qr-code-box"></div><div class="qr-url" id="qrUrl"></div><div class="qr-actions"><button class="secondary" id="copyQrUrl" type="button">Copy link</button><button class="primary" id="downloadQr" type="button">Download QR</button></div><p class="qr-note">Use this on drawings, samples, internal documents or customer-facing material. The QR opens the application record in Vesco Intelligence.</p></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=35"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=40"></script>
 
 
 <script>
-/* VI v35: OEM reference save is intentionally isolated from the main app runtime. */
+/* VI v39: OEM reference save is intentionally isolated from the main app runtime. */
 (function(){
   var form=document.getElementById('oemReferenceForm');
   if(!form) return;

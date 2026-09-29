@@ -12,6 +12,31 @@ const KNOWLEDGE = [
   {title:"Marine Applications",type:"Official",desc:"Marine bearing applications, material comparison and case studies.",url:"https://www.vesconite.com/industry/marine/"},
   {title:"Hydro Case Studies",type:"Official",desc:"Hydro bearing applications and performance information.",url:"https://www.vesconite.com/hydro/case-studies/"}
 ];
+// v40 — Theme preference
+const THEME_KEY = "ava_internal_theme_v1";
+function applyTheme(theme){
+  const dark = theme !== "light";
+  document.body.classList.toggle("dark-theme", dark);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const btn = document.getElementById("themeToggle");
+  if(btn){
+    btn.textContent = dark ? "☀" : "☾";
+    btn.title = dark ? "Switch to light theme" : "Switch to dark theme";
+    btn.setAttribute("aria-label", btn.title);
+  }
+  const meta = document.getElementById("themeColorMeta");
+  if(meta) meta.setAttribute("content", dark ? "#071018" : "#ffffff");
+}
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  applyTheme(saved === "light" ? "light" : "dark");
+  document.getElementById("themeToggle")?.addEventListener("click", ()=>{
+    const next = document.body.classList.contains("dark-theme") ? "light" : "dark";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
+}
+
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const getApps=()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{return[]}};
@@ -302,3 +327,6 @@ $('#adminAddRole')?.addEventListener('click',()=>{if(!requirePermission('users.m
 
 const oldShowPage=showPage;showPage=function(id){normalizeAccess();oldShowPage(id);if(id==='visualiser')renderVisualiser();if(id==='admin')renderAdmin();applyPermissionUI()};
 normalizeAccess();renderVisualiser();renderAdmin();applyPermissionUI();
+
+
+if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", initTheme); } else { initTheme(); }
