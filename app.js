@@ -25,9 +25,44 @@ async function getOemPdf(id){const db=await openOemDb();return new Promise((reso
 async function deleteOemPdf(id){try{const db=await openOemDb();await new Promise((resolve,reject)=>{const tx=db.transaction(OEM_DB_STORE,'readwrite');tx.objectStore(OEM_DB_STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch{}}
 const saveIndustries=a=>localStorage.setItem(INDUSTRIES_KEY,JSON.stringify([...new Set(a)].filter(Boolean).sort()));
 const photosOf=a=>Array.isArray(a.photos)&&a.photos.length?a.photos:(a.photo?[{src:a.photo,caption:""}]:[]);
+
+/* VI v28 stability: users, roles and permissions */
+const USERS_KEY = "ava_internal_users_v1";
+const ROLES_KEY = "ava_internal_roles_v1";
+const CURRENT_USER_KEY = "ava_internal_current_user_v1";
+const PERMISSIONS = {
+  "applications.view":"View applications", "applications.create":"Create applications", "applications.edit":"Edit applications", "applications.delete":"Delete applications", "photos.upload":"Upload photos",
+  "scrape":"Use VI Scraper", "oem.view":"View OEM references", "oem.create":"Add OEM references", "oem.delete":"Delete OEM references", "knowledge.view":"View Knowledge",
+  "visualiser.view":"View Visualiser", "portfolio.create":"Create customer portfolios", "data.export":"Export data", "data.import":"Import / restore data",
+  "industries.manage":"Manage industries", "users.manage":"Manage users & roles", "settings.manage":"Manage system settings"
+};
+const ROLE_DEFAULTS = {
+  "Super Admin":Object.keys(PERMISSIONS),
+  "Admin":["applications.view","applications.create","applications.edit","applications.delete","photos.upload","scrape","oem.view","oem.create","oem.delete","knowledge.view","visualiser.view","portfolio.create","data.export","data.import","industries.manage","users.manage","settings.manage"],
+  "Engineer":["applications.view","applications.create","applications.edit","photos.upload","scrape","oem.view","oem.create","knowledge.view","visualiser.view","portfolio.create"],
+  "Contributor":["applications.view","applications.create","applications.edit","photos.upload","scrape","oem.view","oem.create","knowledge.view"],
+  "Sales":["applications.view","oem.view","knowledge.view","visualiser.view","portfolio.create"],
+  "Viewer":["applications.view","oem.view","knowledge.view","visualiser.view"]
+};
+function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
+function getRoles(){let r=readJson(ROLES_KEY,null);if(!r||typeof r!=='object'||Array.isArray(r)){r=JSON.parse(JSON.stringify(ROLE_DEFAULTS));localStorage.setItem(ROLES_KEY,JSON.stringify(r));}return r}
+function saveRoles(r){localStorage.setItem(ROLES_KEY,JSON.stringify(r))}
+function getUsers(){let u=readJson(USERS_KEY,null);if(!Array.isArray(u)||!u.length){u=[{id:crypto.randomUUID(),name:'Administrator',email:'admin@vesconite.com',role:'Super Admin',active:true,createdAt:new Date().toISOString()}];localStorage.setItem(USERS_KEY,JSON.stringify(u));localStorage.setItem(CURRENT_USER_KEY,u[0].id)}return u}
+function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
+function currentUser(){const users=getUsers();return users.find(u=>u.id===localStorage.getItem(CURRENT_USER_KEY)&&u.active)||users.find(u=>u.active)||users[0]}
+function requirePermission(permission){const u=currentUser();const allowed=!!u&&!!u.active&&getRoles()[u.role]?.includes(permission);if(!allowed){alert('You do not have permission to use this function.');return false}return true}
+function applyPermissionUI(){const u=currentUser(),role=u?.role,allowed=getRoles()[role]||[];$$('[data-permission]').forEach(el=>el.classList.toggle('hidden',!allowed.includes(el.dataset.permission)));$$('[data-permission]').forEach(el=>el.setAttribute('aria-hidden',String(!allowed.includes(el.dataset.permission))))}
+
 function showPage(id){const pagePerm={"scraper":"scrape","oem-references":"oem.view","visualiser":"visualiser.view","admin":"users.manage","add-app":"applications.create","knowledge":"knowledge.view","backup":"data.export"}[id];if(pagePerm&&!requirePermission(pagePerm))return;$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===id || (id==='app-detail'&&b.dataset.page==='library')));window.scrollTo({top:0,behavior:'smooth'});if(id==='knowledge')renderKnowledge();if(id==='discover')renderDiscover();if(id==='oem-references'){fillOemIndustrySelects();renderOemReferences();}}
 document.getElementById('avaHomeLogo')?.addEventListener('click',()=>showPage('home'));
-document.addEventListener('click',e=>{const p=e.target.closest('[data-page]');if(p){showPage(p.dataset.page);return}const item=e.target.closest('[data-app-id]');if(item)openDetail(item.dataset.appId);});
+document.addEventListener('click',e=>{
+  const more=e.target.closest('#moreNav');
+  if(more){e.preventDefault();const menu=$('#moreMenu');menu?.classList.toggle('open');menu?.setAttribute('aria-hidden',String(!menu?.classList.contains('open')));return}
+  const p=e.target.closest('[data-page]');
+  if(p){$('#moreMenu')?.classList.remove('open');$('#moreMenu')?.setAttribute('aria-hidden','true');showPage(p.dataset.page);return}
+  if(!e.target.closest('#moreMenu')){$('#moreMenu')?.classList.remove('open');$('#moreMenu')?.setAttribute('aria-hidden','true')}
+  const item=e.target.closest('[data-app-id]');if(item)openDetail(item.dataset.appId);
+});
 let selectedOemPdf=null;
 function fillOemIndustrySelects(){const inds=[...new Set([...getIndustries(),...getApps().map(a=>a.industry),...getOemRefs().map(r=>r.industry)])].filter(Boolean).sort();const select=$('#oemIndustry'),filter=$('#oemReferenceIndustryFilter');if(select){const v=select.value;select.innerHTML='<option value="">Select industry</option>'+inds.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('');if(inds.includes(v))select.value=v}if(filter){const v=filter.value;filter.innerHTML='<option value="">All industries</option>'+inds.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('');if(inds.includes(v))filter.value=v}}
 function renderOemReferences(){const box=$('#oemReferenceList');if(!box)return;const q=($('#oemReferenceSearch')?.value||'').toLowerCase().trim(),f=$('#oemReferenceIndustryFilter')?.value||'';const refs=getOemRefs().filter(r=>(!q||JSON.stringify(r).toLowerCase().includes(q))&&(!f||r.industry===f)).sort((a,b)=>new Date(b.date)-new Date(a.date));if(!refs.length){box.innerHTML='<div class="empty-state"><strong>No OEM references saved.</strong><p>Add a public-domain OEM webpage, PDF, or both above.</p></div>';return}box.innerHTML=refs.map(r=>`<article class="oem-reference-card"><div class="oem-ref-top"><span class="tag">${esc(r.industry||'Uncategorised')}</span><span class="oem-ref-date">${new Date(r.date).toLocaleDateString()}</span></div><h3>${esc(r.name)}</h3>${r.notes?`<p>${esc(r.notes)}</p>`:''}<div class="oem-ref-sources">${r.url?`<a class="oem-source-link" href="${esc(r.url)}" target="_blank" rel="noopener">Web reference ↗</a>`:''}${r.pdfName?`<button type="button" class="secondary small-btn" data-oem-pdf="${esc(r.id)}">Open PDF</button>`:''}</div><button type="button" class="oem-delete" data-oem-delete="${esc(r.id)}">Delete</button></article>`).join('');$$('[data-oem-pdf]').forEach(b=>b.onclick=async()=>{try{const blob=await getOemPdf(b.dataset.oemPdf);if(!blob){alert('PDF is not available on this device.');return}const url=URL.createObjectURL(blob);window.open(url,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(url),60000)}catch{alert('Could not open the PDF.')}});$$('[data-oem-delete]').forEach(b=>b.onclick=async()=>{if(!requirePermission('oem.delete'))return;if(!confirm('Delete this OEM reference?'))return;const id=b.dataset.oemDelete;saveOemRefs(getOemRefs().filter(r=>r.id!==id));await deleteOemPdf(id);renderOemReferences()})}
@@ -189,6 +224,7 @@ $('#scrapePdf')?.addEventListener('change',e=>{scraperPdfFile=e.target.files[0]|
 $('#runUrlScrape')?.addEventListener('click',()=>{if(requirePermission('scrape'))runUrlScrape()});$('#runPdfScrape')?.addEventListener('click',()=>{if(requirePermission('scrape'))runPdfScrape()});
 
 /* VI Visualiser */
+function qualityScore(a){return appQuality(a)}
 function qualityBucket(a){const score=qualityScore(a);return score>=80?'High quality':score>=55?'Needs detail':'Needs evidence'}
 function renderVisualiser(){
   const apps=getApps();
