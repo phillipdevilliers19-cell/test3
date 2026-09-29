@@ -277,7 +277,7 @@
   <div id="moreMenu" class="more-menu" aria-hidden="true">
     <button class="more-menu-item" data-page="oem-references" data-permission="oem.view"><span>◫</span><div><strong>OEM Public</strong><small>Public OEM references</small></div></button>
     <button class="more-menu-item" data-page="visualiser" data-permission="visualiser.view"><span>◈</span><div><strong>Visualiser</strong><small>Application and industry insights</small></div></button>
-    <button class="more-menu-item" data-page="admin" data-permission="users.manage"><span>⚙</span><div><strong>Admin</strong><small>Users, roles and data</small></div></button>
+    <button class="more-menu-item" data-page="admin" data-permission-any="users.manage,industries.manage,data.export,data.import"><span>⚙</span><div><strong>Admin</strong><small>Users, roles and data</small></div></button>
     <button class="more-menu-item" data-page="add-app" data-permission="applications.create"><span>＋</span><div><strong>Add Application</strong><small>Create a new record</small></div></button>
   </div>
   <nav class="bottom-nav">
@@ -289,8 +289,56 @@
   </nav>
 </div>
 <div id="qrModal" class="modal-backdrop hidden"><div class="qr-modal"><button class="modal-close floating-close" id="closeQrModal">×</button><div class="eyebrow">VI APPLICATION QR</div><h2 id="qrTitle">Application</h2><p id="qrSubtitle">Scan to open this application directly in Vesco Intelligence.</p><div id="qrCode" class="qr-code-box"></div><div class="qr-url" id="qrUrl"></div><div class="qr-actions"><button class="secondary" id="copyQrUrl" type="button">Copy link</button><button class="primary" id="downloadQr" type="button">Download QR</button></div><p class="qr-note">Use this on drawings, samples, internal documents or customer-facing material. The QR opens the application record in Vesco Intelligence.</p></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=34"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=35"></script>
 
+
+<script>
+/* VI v35: OEM reference save is intentionally isolated from the main app runtime. */
+(function(){
+  var form=document.getElementById('oemReferenceForm');
+  if(!form) return;
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      var name=(document.getElementById('oemAppName').value||'').trim();
+      var industry=document.getElementById('oemIndustry').value||'';
+      var manufacturer=(document.getElementById('oemManufacturer').value||'').trim();
+      var url=(document.getElementById('oemUrl').value||'').trim();
+      var notes=(document.getElementById('oemNotes').value||'').trim();
+      var pdfInput=document.getElementById('oemPdf');
+      var pdf=pdfInput && pdfInput.files && pdfInput.files[0] ? pdfInput.files[0] : null;
+      if(!name){alert('Application name is required.');return;}
+      if(!industry){alert('Please select an industry.');document.getElementById('oemIndustry').focus();return;}
+      if(!url && !pdf){alert('Attach a PDF or add a web link.');return;}
+      if(url){try{new URL(url);}catch(err){alert('Please enter a valid web link.');return;}}
+      var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(16).slice(2);
+      var ref={id:id,date:new Date().toISOString(),name:name,industry:industry,manufacturer:manufacturer,url:url,notes:notes,pdfName:pdf?pdf.name:'',pdfType:pdf?(pdf.type||'application/pdf'):'application/pdf',pdfSize:pdf?pdf.size:0,pdfStored:false};
+      var refs=[];
+      try{refs=JSON.parse(localStorage.getItem('ava_internal_oem_public_refs_v1')||'[]');if(!Array.isArray(refs))refs=[];}catch(err){refs=[];}
+      refs.unshift(ref);
+      localStorage.setItem('ava_internal_oem_public_refs_v1',JSON.stringify(refs));
+      if(pdf){
+        try{
+          var db=await new Promise(function(resolve,reject){var r=indexedDB.open('ava_internal_oem_refs_db_v1',1);r.onupgradeneeded=function(){if(!r.result.objectStoreNames.contains('pdfs'))r.result.createObjectStore('pdfs')};r.onsuccess=function(){resolve(r.result)};r.onerror=function(){reject(r.error)}});
+          await new Promise(function(resolve,reject){var tx=db.transaction('pdfs','readwrite');tx.objectStore('pdfs').put(pdf,id);tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close();ref.pdfStored=true;var savedRefs=JSON.parse(localStorage.getItem('ava_internal_oem_public_refs_v1')||'[]');var savedRef=savedRefs.find(function(x){return x.id===id});if(savedRef){savedRef.pdfStored=true;localStorage.setItem('ava_internal_oem_public_refs_v1',JSON.stringify(savedRefs));}
+        }catch(pdfErr){console.warn('PDF storage unavailable; reference metadata was still saved.',pdfErr);}
+      }
+      form.reset();
+      document.getElementById('oemSelectedFile').textContent='No PDF attached.';
+      if(typeof window.renderOemReferences==='function') window.renderOemReferences();
+      else {
+        var box=document.getElementById('oemReferenceList');
+        if(box) box.innerHTML='<div class="empty-state"><strong>Saved.</strong><p>'+ref.name.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+' · '+ref.industry+'</p></div>';
+      }
+      alert('OEM reference saved.');
+    } catch(err) {
+      console.error('OEM save failed',err);
+      alert('The OEM reference could not be saved. The form has not been cleared.');
+    }
+  }, true);
+})();
+</script>
 <script>
 (function(){
   function viNavigate(id){
