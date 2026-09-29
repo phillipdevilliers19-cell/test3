@@ -47,22 +47,29 @@ const ROLE_DEFAULTS = {
 function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
 function getRoles(){let r=readJson(ROLES_KEY,null);if(!r||typeof r!=='object'||Array.isArray(r)){r=JSON.parse(JSON.stringify(ROLE_DEFAULTS));localStorage.setItem(ROLES_KEY,JSON.stringify(r));}return r}
 function saveRoles(r){localStorage.setItem(ROLES_KEY,JSON.stringify(r))}
+function normalizeAccess(){
+  const defaults=JSON.parse(JSON.stringify(ROLE_DEFAULTS));
+  let roles=readJson(ROLES_KEY,null);
+  if(!roles||typeof roles!=='object'||Array.isArray(roles)) roles=defaults;
+  else Object.keys(defaults).forEach(name=>{if(!Array.isArray(roles[name]))roles[name]=defaults[name]; else roles[name]=[...new Set([...roles[name],...defaults[name]])]});
+  localStorage.setItem(ROLES_KEY,JSON.stringify(roles));
+  let users=readJson(USERS_KEY,null);
+  if(!Array.isArray(users)||!users.length){users=[{id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),name:'Administrator',email:'admin@vesconite.com',role:'Super Admin',active:true,createdAt:new Date().toISOString()}];localStorage.setItem(USERS_KEY,JSON.stringify(users));}
+  users=users.map(u=>({...u,role:roles[u.role]?u.role:'Viewer',active:u.active!==false}));
+  if(!users.some(u=>u.active)) users[0].active=true;
+  localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  const current=localStorage.getItem(CURRENT_USER_KEY);
+  if(!users.some(u=>u.id===current&&u.active)) localStorage.setItem(CURRENT_USER_KEY,users.find(u=>u.active).id);
+}
+
 function getUsers(){let u=readJson(USERS_KEY,null);if(!Array.isArray(u)||!u.length){u=[{id:crypto.randomUUID(),name:'Administrator',email:'admin@vesconite.com',role:'Super Admin',active:true,createdAt:new Date().toISOString()}];localStorage.setItem(USERS_KEY,JSON.stringify(u));localStorage.setItem(CURRENT_USER_KEY,u[0].id)}return u}
 function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
 function currentUser(){const users=getUsers();return users.find(u=>u.id===localStorage.getItem(CURRENT_USER_KEY)&&u.active)||users.find(u=>u.active)||users[0]}
 function requirePermission(permission){const u=currentUser();const allowed=!!u&&!!u.active&&getRoles()[u.role]?.includes(permission);if(!allowed){alert('You do not have permission to use this function.');return false}return true}
 function applyPermissionUI(){const u=currentUser(),role=u?.role,allowed=getRoles()[role]||[];$$('[data-permission]').forEach(el=>el.classList.toggle('hidden',!allowed.includes(el.dataset.permission)));$$('[data-permission]').forEach(el=>el.setAttribute('aria-hidden',String(!allowed.includes(el.dataset.permission))))}
 
-function showPage(id){const pagePerm={"scraper":"scrape","oem-references":"oem.view","visualiser":"visualiser.view","admin":"users.manage","add-app":"applications.create","knowledge":"knowledge.view","backup":"data.export"}[id];if(pagePerm&&!requirePermission(pagePerm))return;$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===id || (id==='app-detail'&&b.dataset.page==='library')));window.scrollTo({top:0,behavior:'smooth'});if(id==='knowledge')renderKnowledge();if(id==='discover')renderDiscover();if(id==='oem-references'){fillOemIndustrySelects();renderOemReferences();}}
+function showPage(id){normalizeAccess();const pagePerm={"scraper":"scrape","oem-references":"oem.view","visualiser":"visualiser.view","admin":"users.manage","add-app":"applications.create","knowledge":"knowledge.view","backup":"data.export"}[id];if(pagePerm&&!requirePermission(pagePerm))return;$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===id || (id==='app-detail'&&b.dataset.page==='library')));window.scrollTo({top:0,behavior:'smooth'});if(id==='knowledge')renderKnowledge();if(id==='discover')renderDiscover();if(id==='oem-references'){fillOemIndustrySelects();renderOemReferences();}}
 document.getElementById('avaHomeLogo')?.addEventListener('click',()=>showPage('home'));
-document.addEventListener('click',e=>{
-  const more=e.target.closest('#moreNav');
-  if(more){e.preventDefault();const menu=$('#moreMenu');menu?.classList.toggle('open');menu?.setAttribute('aria-hidden',String(!menu?.classList.contains('open')));return}
-  const p=e.target.closest('[data-page]');
-  if(p){$('#moreMenu')?.classList.remove('open');$('#moreMenu')?.setAttribute('aria-hidden','true');showPage(p.dataset.page);return}
-  if(!e.target.closest('#moreMenu')){$('#moreMenu')?.classList.remove('open');$('#moreMenu')?.setAttribute('aria-hidden','true')}
-  const item=e.target.closest('[data-app-id]');if(item)openDetail(item.dataset.appId);
-});
 let selectedOemPdf=null;
 function fillOemIndustrySelects(){const inds=[...new Set([...getIndustries(),...getApps().map(a=>a.industry),...getOemRefs().map(r=>r.industry)])].filter(Boolean).sort();const select=$('#oemIndustry'),filter=$('#oemReferenceIndustryFilter');if(select){const v=select.value;select.innerHTML='<option value="">Select industry</option>'+inds.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('');if(inds.includes(v))select.value=v}if(filter){const v=filter.value;filter.innerHTML='<option value="">All industries</option>'+inds.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('');if(inds.includes(v))filter.value=v}}
 function renderOemReferences(){const box=$('#oemReferenceList');if(!box)return;const q=($('#oemReferenceSearch')?.value||'').toLowerCase().trim(),f=$('#oemReferenceIndustryFilter')?.value||'';const refs=getOemRefs().filter(r=>(!q||JSON.stringify(r).toLowerCase().includes(q))&&(!f||r.industry===f)).sort((a,b)=>new Date(b.date)-new Date(a.date));if(!refs.length){box.innerHTML='<div class="empty-state"><strong>No OEM references saved.</strong><p>Add a public-domain OEM webpage, PDF, or both above.</p></div>';return}box.innerHTML=refs.map(r=>`<article class="oem-reference-card"><div class="oem-ref-top"><span class="tag">${esc(r.industry||'Uncategorised')}</span><span class="oem-ref-date">${new Date(r.date).toLocaleDateString()}</span></div><h3>${esc(r.name)}</h3>${r.notes?`<p>${esc(r.notes)}</p>`:''}<div class="oem-ref-sources">${r.url?`<a class="oem-source-link" href="${esc(r.url)}" target="_blank" rel="noopener">Web reference ↗</a>`:''}${r.pdfName?`<button type="button" class="secondary small-btn" data-oem-pdf="${esc(r.id)}">Open PDF</button>`:''}</div><button type="button" class="oem-delete" data-oem-delete="${esc(r.id)}">Delete</button></article>`).join('');$$('[data-oem-pdf]').forEach(b=>b.onclick=async()=>{try{const blob=await getOemPdf(b.dataset.oemPdf);if(!blob){alert('PDF is not available on this device.');return}const url=URL.createObjectURL(blob);window.open(url,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(url),60000)}catch{alert('Could not open the PDF.')}});$$('[data-oem-delete]').forEach(b=>b.onclick=async()=>{if(!requirePermission('oem.delete'))return;if(!confirm('Delete this OEM reference?'))return;const id=b.dataset.oemDelete;saveOemRefs(getOemRefs().filter(r=>r.id!==id));await deleteOemPdf(id);renderOemReferences()})}
@@ -274,5 +281,5 @@ $('#adminResetRole')?.addEventListener('click',()=>{if(!requirePermission('users
 $('#adminSaveRole')?.addEventListener('click',()=>{if(!requirePermission('users.manage'))return;const r=$('#adminRoleSelect').value,roles=getRoles();roles[r]=$$('[data-permission-check]:checked').map(x=>x.dataset.permissionCheck);saveRoles(roles);renderRolePermissions(r);applyPermissionUI();alert(`${r} permissions saved.`)});
 $('#adminAddRole')?.addEventListener('click',()=>{if(!requirePermission('users.manage'))return;const name=$('#adminNewRole').value.trim();if(!name)return;const roles=getRoles();if(roles[name]){alert('That role already exists.');return}roles[name]=[];saveRoles(roles);$('#adminNewRole').value='';renderAdmin();$('#adminRoleSelect').value=name;renderRolePermissions(name)});
 
-const oldShowPage=showPage;showPage=function(id){oldShowPage(id);if(id==='visualiser')renderVisualiser();if(id==='admin')renderAdmin();applyPermissionUI()};
-renderVisualiser();renderAdmin();applyPermissionUI();
+const oldShowPage=showPage;showPage=function(id){normalizeAccess();oldShowPage(id);if(id==='visualiser')renderVisualiser();if(id==='admin')renderAdmin();applyPermissionUI()};
+normalizeAccess();renderVisualiser();renderAdmin();applyPermissionUI();
