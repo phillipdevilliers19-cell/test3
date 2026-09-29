@@ -37,6 +37,14 @@ function initTheme(){
   });
 }
 
+// Initialise the theme before the remainder of the app so a later feature error
+// cannot prevent the theme control from appearing or working.
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", initTheme, {once:true});
+}else{
+  initTheme();
+}
+
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const getApps=()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{return[]}};
@@ -328,5 +336,3 @@ $('#adminAddRole')?.addEventListener('click',()=>{if(!requirePermission('users.m
 const oldShowPage=showPage;showPage=function(id){normalizeAccess();oldShowPage(id);if(id==='visualiser')renderVisualiser();if(id==='admin')renderAdmin();applyPermissionUI()};
 normalizeAccess();renderVisualiser();renderAdmin();applyPermissionUI();
 
-
-if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", initTheme); } else { initTheme(); }

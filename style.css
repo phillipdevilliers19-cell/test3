@@ -416,3 +416,36 @@ label{color:#536164}label input,label select,label textarea{border:1px solid #cf
 .dark-theme .oem-detail-grid>div{color:#edf4f7!important}
 .dark-theme .oem-detail-grid small,.dark-theme .oem-detail-notes p{color:#aebfc6!important}
 .dark-theme .oem-detail-modal .form-actions .secondary{background:#0d1822!important;color:#edf4f7!important;border-color:#263a46!important}
+
+/* V42 — theme control placement
+   Keep the theme and backup controls clear of the centred AVA logo. */
+.topbar-actions{
+  position:absolute !important;
+  right:28px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  z-index:1003 !important;
+}
+.topbar-actions .icon-btn{
+  position:relative !important;
+  display:grid !important;
+  place-items:center !important;
+  flex:0 0 42px !important;
+  width:42px !important;
+  height:42px !important;
+  padding:0 !important;
+  z-index:1004 !important;
+  cursor:pointer !important;
+}
+@media(max-width:760px){
+  .topbar-actions{
+    right:12px !important;
+    top:calc(env(safe-area-inset-top) + 38px) !important;
+    transform:translateY(-50%) !important;
+    gap:6px !important;
+  }
+  .topbar-actions .icon-btn{width:40px !important;height:40px !important;flex-basis:40px !important}
+}
