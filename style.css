@@ -631,3 +631,37 @@ body.dark-theme{
   .ava-home-logo{width:160px !important;height:76px !important;}
   .ava-home-logo img{width:146px !important;max-height:70px !important;}
 }
+
+
+/* V53 — stable header controls: keep both controls together at the top-right. */
+.topbar .topbar-actions{
+  position:absolute !important;
+  right:28px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  z-index:1003 !important;
+}
+.topbar .topbar-actions .icon-btn{
+  position:relative !important;
+  margin:0 !important;
+  flex:0 0 auto !important;
+}
+.topbar #backupBtn{
+  position:relative !important;
+  right:auto !important;
+  top:auto !important;
+  transform:none !important;
+}
+@media(max-width:760px){
+  .topbar .topbar-actions{
+    right:12px !important;
+    gap:6px !important;
+  }
+  .topbar .topbar-actions .icon-btn{
+    width:40px !important;
+    height:40px !important;
+  }
+}
