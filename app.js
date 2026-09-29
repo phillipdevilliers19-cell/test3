@@ -12,7 +12,7 @@ const KNOWLEDGE = [
   {title:"Marine Applications",type:"Official",desc:"Marine bearing applications, material comparison and case studies.",url:"https://www.vesconite.com/industry/marine/"},
   {title:"Hydro Case Studies",type:"Official",desc:"Hydro bearing applications and performance information.",url:"https://www.vesconite.com/hydro/case-studies/"}
 ];
-// V47 Core bridge: global header/theme controls are isolated in core.js.
+// V56 Core bridge: global header/theme controls are isolated in core.js.
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const getApps=()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{return[]}};
@@ -318,6 +318,5 @@ $('#adminResetRole')?.addEventListener('click',()=>{if(!requirePermission('users
 $('#adminSaveRole')?.addEventListener('click',()=>{if(!requirePermission('users.manage'))return;const r=$('#adminRoleSelect').value,roles=getRoles();if(r==='Super Admin'&&currentUser()?.role!=='Super Admin'){alert('Only a Super Admin can modify the Super Admin role.');return}roles[r]=$$('[data-permission-check]:checked').map(x=>x.dataset.permissionCheck);saveRoles(roles);renderRolePermissions(r);applyPermissionUI();alert(`${r} permissions saved.`)});
 $('#adminAddRole')?.addEventListener('click',()=>{if(!requirePermission('users.manage'))return;const name=$('#adminNewRole').value.trim();if(!name)return;const roles=getRoles();if(roles[name]){alert('That role already exists.');return}roles[name]=[];saveRoles(roles);$('#adminNewRole').value='';renderAdmin();$('#adminRoleSelect').value=name;renderRolePermissions(name)});
 
-initCoreControls();
 normalizeAccess();renderVisualiser();renderAdmin();applyPermissionUI();
 

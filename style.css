@@ -607,7 +607,7 @@ body.dark-theme{
 :root{--bg:#f5f8f9;--panel:#fff;--soft:#f1f5f6;--text:#18262d;--muted:#667982;--line:#dbe4e7;--accent:#167b68}body{background:var(--bg);color:var(--text)}body.dark-theme{--bg:#071018;--panel:#0d1822;--soft:#10232b;--text:#edf4f7;--muted:#aebfc6;--line:#263a46;--accent:#54e1bd;background:var(--bg)!important;color:var(--text)!important}
 
 
-/* V50: Vesco Intelligence logo — final authoritative sizing */
+/* V56: Vesco Intelligence logo — final authoritative sizing */
 .ava-home-logo{
   width:180px !important;
   height:82px !important;
@@ -633,7 +633,7 @@ body.dark-theme{
 }
 
 
-/* V53 — stable header controls: keep both controls together at the top-right. */
+/* V56 — stable header controls: keep both controls together at the top-right. */
 .topbar .topbar-actions{
   position:absolute !important;
   right:28px !important;
@@ -665,3 +665,79 @@ body.dark-theme{
     height:40px !important;
   }
 }
+
+
+/* V56 — stable header/logo and theme control sizing */
+.topbar{min-height:92px;height:92px !important;}
+.ava-home-logo{width:220px !important;height:82px !important;overflow:visible !important;}
+.ava-home-logo img{width:200px !important;height:auto !important;max-width:none !important;max-height:80px !important;object-fit:contain !important;}
+.topbar .topbar-actions{right:28px !important;top:50% !important;transform:translateY(-50%) !important;display:flex !important;align-items:center !important;gap:8px !important;}
+.topbar .topbar-actions .icon-btn{width:42px !important;height:42px !important;flex:0 0 42px !important;}
+@media(max-width:760px){
+  .topbar{min-height:84px;height:84px !important;padding-left:10px !important;padding-right:10px !important;}
+  .ava-home-logo{width:190px !important;height:76px !important;}
+  .ava-home-logo img{width:176px !important;max-height:72px !important;}
+  .topbar .topbar-actions{right:10px !important;gap:5px !important;}
+  .topbar .topbar-actions .icon-btn{width:38px !important;height:38px !important;flex-basis:38px !important;}
+}
+
+
+/* V56 — definitive light-theme cleanup. The default theme must never inherit legacy dark surfaces. */
+body:not(.dark-theme){
+  background:var(--bg)!important;color:var(--text)!important;color-scheme:light;
+}
+body:not(.dark-theme) .topbar{background:rgba(255,255,255,.94)!important;border-color:var(--line)!important}
+body:not(.dark-theme) .quick-card,
+body:not(.dark-theme) .calc-card,
+body:not(.dark-theme) .form-card,
+body:not(.dark-theme) .admin-card,
+body:not(.dark-theme) .viz-card,
+body:not(.dark-theme) .story-card,
+body:not(.dark-theme) .similar-card,
+body:not(.dark-theme) .opp-card,
+body:not(.dark-theme) .knowledge-card,
+body:not(.dark-theme) .result,
+body:not(.dark-theme) .detail-copy,
+body:not(.dark-theme) .detail-box,
+body:not(.dark-theme) .app-item,
+body:not(.dark-theme) .oem-reference-card{background:var(--panel)!important;color:var(--text)!important;border-color:var(--line)!important}
+body:not(.dark-theme) .quick-card:not(.accent),
+body:not(.dark-theme) .calc-card:not(.featured){background:var(--panel)!important}
+body:not(.dark-theme) .quick-card.accent{background:linear-gradient(145deg,#eef8f5,#f6fbfa)!important;border-color:#cce9e2!important}
+body:not(.dark-theme) .quick-card strong,
+body:not(.dark-theme) .calc-card strong,
+body:not(.dark-theme) .app-item h3,
+body:not(.dark-theme) .detail-copy h1,
+body:not(.dark-theme) .knowledge-card h3,
+body:not(.dark-theme) .result strong{color:var(--text)!important}
+body:not(.dark-theme) .quick-card small,
+body:not(.dark-theme) .calc-card small,
+body:not(.dark-theme) .stat small,
+body:not(.dark-theme) .hero-copy,
+body:not(.dark-theme) .page-title>p:not(.eyebrow){color:var(--muted)!important}
+body:not(.dark-theme) label{color:#42545c!important}
+body:not(.dark-theme) label input,
+body:not(.dark-theme) label select,
+body:not(.dark-theme) label textarea,
+body:not(.dark-theme) .modal-search{background:#fff!important;color:var(--text)!important;border-color:var(--line)!important}
+body:not(.dark-theme) .calc-card>span{background:#edf7f5!important;color:var(--accent)!important}
+body:not(.dark-theme) .notice,
+body:not(.dark-theme) .formula-note{background:#f3f8f9!important;border-color:#d7e5e8!important;color:var(--muted)!important}
+body:not(.dark-theme) .notice>span{background:#e7f4f1!important;color:var(--accent)!important}
+body:not(.dark-theme) .notice strong,
+body:not(.dark-theme) .formula-note strong{color:var(--text)!important}
+body:not(.dark-theme) .danger{background:#fff5f5!important;color:#a33!important;border-color:#e2bcbc!important}
+body:not(.dark-theme) .file-button{background:#fff!important;color:var(--text)!important}
+body:not(.dark-theme) .app-thumb{background:#edf2f4!important;color:#6b7c83!important}
+body:not(.dark-theme) .empty{border-color:#ccdadd!important}
+body:not(.dark-theme) .detail-photo{background:#edf2f4!important}
+body:not(.dark-theme) .detail-box p{color:#53666e!important}
+body:not(.dark-theme) .warning{color:#8a5b09!important;background:#fff8e8!important;border-color:#e9d7a7!important}
+body:not(.dark-theme) .success{color:#087a67!important;background:#eef9f6!important;border-color:#cce9e2!important}
+body:not(.dark-theme) .math{color:#385b64!important;background:#f2f6f7!important}
+body:not(.dark-theme) .advanced{background:#f6f9fa!important}
+body:not(.dark-theme) .modal{background:#fff!important;border-color:var(--line)!important}
+body:not(.dark-theme) .link-thumb{background:#edf2f4!important}
+body:not(.dark-theme) .portfolio-strip{background:#f0f8f6!important;border-color:#cce9e2!important}
+body:not(.dark-theme) .bottom-nav{background:rgba(255,255,255,.96)!important;border-color:var(--line)!important}
+body:not(.dark-theme) .oem-reference-card:hover{border-color:#a8cbc3!important}

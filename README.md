@@ -15,4 +15,4 @@ Stable architecture cleanup and theme/data regression fix.
 Replace the complete contents of the GitHub Pages app with this version. Do not mix V46 files with older versions.
 
 
-V54 fixes the GitHub Pages Home Screen launch path and stabilizes the top-right header controls.
+V56 fixes the GitHub Pages Home Screen launch path, app icon, light theme, and top-right header controls.
