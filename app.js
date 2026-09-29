@@ -28,13 +28,9 @@ function applyTheme(theme){
   if(meta) meta.setAttribute("content", dark ? "#071018" : "#ffffff");
 }
 function initTheme(){
-  const saved = localStorage.getItem(THEME_KEY);
+  let saved = "light";
+  try{ saved = localStorage.getItem(THEME_KEY) || "light"; }catch(e){}
   applyTheme(saved === "dark" ? "dark" : "light");
-  document.getElementById("themeToggle")?.addEventListener("click", ()=>{
-    const next = document.body.classList.contains("dark-theme") ? "light" : "dark";
-    localStorage.setItem(THEME_KEY, next);
-    applyTheme(next);
-  });
 }
 
 // Initialise the theme before the remainder of the app so a later feature error
