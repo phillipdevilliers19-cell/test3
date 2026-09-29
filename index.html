@@ -129,10 +129,25 @@
         <form id="oemReferenceForm">
           <div class="two-col">
             <label>Application name<input id="oemAppName" required placeholder="e.g. Vertical Turbine Pump"></label>
-            <label>Industry<select id="oemIndustry" required><option value="">Select industry</option><option>Agriculture</option><option>Construction</option><option>Forestry</option><option>Hydraulics</option><option>Industrial</option><option>Marine</option><option>Mining</option><option>Pumps</option><option>Renewable Energy</option><option>Transport</option><option>Water &amp; Wastewater</option><option>Valves</option><option>Other</option></select></label>
+            <label>Industry<select id="oemIndustry" name="industry" required aria-label="OEM reference industry">
+              <option value="" disabled selected>Select industry</option>
+              <option value="Agriculture">Agriculture</option>
+              <option value="Construction">Construction</option>
+              <option value="Forestry">Forestry</option>
+              <option value="Hydraulics">Hydraulics</option>
+              <option value="Industrial">Industrial</option>
+              <option value="Marine">Marine</option>
+              <option value="Mining">Mining</option>
+              <option value="Pumps">Pumps</option>
+              <option value="Renewable Energy">Renewable Energy</option>
+              <option value="Transport">Transport</option>
+              <option value="Water &amp; Wastewater">Water &amp; Wastewater</option>
+              <option value="Valves">Valves</option>
+              <option value="Other">Other</option>
+            </select></label>
           </div>
           <div class="two-col">
-            <label>OEM / Manufacturer <span class="optional">optional</span><input id="oemManufacturer" placeholder="e.g. Flowserve, Sulzer, SKF"></label>
+            <label>OEM / Manufacturer <span class="optional">optional</span><input id="oemManufacturer" name="manufacturer" autocomplete="organization" placeholder="e.g. Flowserve, Sulzer, SKF"></label>
             <label>Web link <span class="optional">optional</span><input id="oemUrl" type="url" placeholder="https://www.oem.com/application"></label>
           </div>
           <label class="file-button oem-pdf-button">Attach PDF <span class="optional">optional</span><input id="oemPdf" type="file" accept="application/pdf,.pdf"></label>
@@ -274,7 +289,7 @@
   </nav>
 </div>
 <div id="qrModal" class="modal-backdrop hidden"><div class="qr-modal"><button class="modal-close floating-close" id="closeQrModal">×</button><div class="eyebrow">VI APPLICATION QR</div><h2 id="qrTitle">Application</h2><p id="qrSubtitle">Scan to open this application directly in Vesco Intelligence.</p><div id="qrCode" class="qr-code-box"></div><div class="qr-url" id="qrUrl"></div><div class="qr-actions"><button class="secondary" id="copyQrUrl" type="button">Copy link</button><button class="primary" id="downloadQr" type="button">Download QR</button></div><p class="qr-note">Use this on drawings, samples, internal documents or customer-facing material. The QR opens the application record in Vesco Intelligence.</p></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=31"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="app.js?v=34"></script>
 
 <script>
 (function(){
