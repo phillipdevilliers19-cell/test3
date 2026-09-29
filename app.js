@@ -29,7 +29,7 @@ function applyTheme(theme){
 }
 function initTheme(){
   const saved = localStorage.getItem(THEME_KEY);
-  applyTheme(saved === "light" ? "light" : "dark");
+  applyTheme(saved === "dark" ? "dark" : "light");
   document.getElementById("themeToggle")?.addEventListener("click", ()=>{
     const next = document.body.classList.contains("dark-theme") ? "light" : "dark";
     localStorage.setItem(THEME_KEY, next);

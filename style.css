@@ -354,3 +354,65 @@ label{color:#536164}label input,label select,label textarea{border:1px solid #cf
 .dark-theme .icon-btn{background:#0d1822!important;border-color:#263a46!important;color:#edf4f7!important}
 .dark-theme .icon-btn:hover{border-color:#3d766c!important;color:#54e1bd!important}
 @media(max-width:760px){.topbar-actions{gap:6px}.topbar-actions .icon-btn{width:40px;height:40px}}
+
+
+/* v41 — complete light/dark theme system
+   Light is the default. Dark mode is applied by .dark-theme. */
+.dark-theme body{background:#071018!important;color:#edf4f7!important}
+.dark-theme .app-shell{background:transparent!important}
+.dark-theme main{color:#edf4f7}
+.dark-theme .page-title h1,.dark-theme .hero h1,.dark-theme .section-head h2,.dark-theme .subhead{color:#edf4f7!important}
+.dark-theme .hero-copy,.dark-theme .page-title>p:not(.eyebrow),.dark-theme .quick-card small,.dark-theme .calc-card small,.dark-theme .stat small{color:#8ea2ad!important}
+.dark-theme .quick-card,.dark-theme .calc-card,.dark-theme .stat,.dark-theme .form-card,.dark-theme .app-item,.dark-theme .detail-copy,.dark-theme .detail-box,.dark-theme .story-card,.dark-theme .similar-card,.dark-theme .opp-card,.dark-theme .knowledge-card,.dark-theme .result,.dark-theme .viz-card,.dark-theme .admin-card{background:#0d1822!important;border-color:#20303d!important;color:#edf4f7!important}
+.dark-theme .quick-card strong,.dark-theme .calc-card strong,.dark-theme .stat span,.dark-theme .app-item h3,.dark-theme .detail-copy h1,.dark-theme .knowledge-card h3,.dark-theme .result strong{color:#edf4f7!important}
+.dark-theme .quick-card.accent{background:linear-gradient(145deg,#12352f,#0d1e25)!important;border-color:#245a50!important}
+.dark-theme .notice,.dark-theme .formula-note{background:#0b1b26!important;border-color:#244052!important;color:#8ea2ad!important}
+.dark-theme .notice strong,.dark-theme .formula-note strong{color:#edf4f7!important}
+.dark-theme label{color:#b9c7ce!important}
+.dark-theme label input,.dark-theme label select,.dark-theme label textarea,.dark-theme .library-tools input,.dark-theme .library-tools select,.dark-theme .modal-filter{background:#08131c!important;border-color:#263a46!important;color:#edf4f7!important}
+.dark-theme .app-thumb,.dark-theme .detail-photo{background:#0b1820!important;color:#667c87!important;border-color:#20303d!important}
+.dark-theme .app-item p,.dark-theme .detail-copy p,.dark-theme .detail-box p{color:#aebfc6!important}
+.dark-theme .empty{border-color:#29404d!important;color:#8ea2ad!important}
+.dark-theme .tag{background:#102d29!important;border-color:#1d5148!important;color:#91ead5!important}
+.dark-theme .back{color:#8ea2ad!important}
+.dark-theme .filter-chip{background:#0d1822!important;border-color:#263a46!important;color:#aebfc6!important}
+.dark-theme .filter-chip.active{background:#12352f!important;border-color:#245a50!important;color:#91ead5!important}
+.dark-theme .primary{color:#061118!important}
+.dark-theme .success{background:#0d2924!important;border-color:#225a4e!important;color:#91f3d9!important}
+.dark-theme .warning{background:#2a2110!important;border-color:#5c4920!important;color:#ffc875!important}
+.dark-theme .math{background:#08131b!important;color:#a7c7cf!important}
+.dark-theme .modal-backdrop{background:rgba(0,0,0,.78)!important}
+.dark-theme .modal,.dark-theme .customer-modal,.dark-theme .comparison-sheet,.dark-theme .qr-modal{background:#0b1720!important;border-color:#2a3d49!important;color:#edf4f7!important}
+.dark-theme .modal-head,.dark-theme .modal-footer{border-color:#20303d!important}
+.dark-theme .modal-head h2,.dark-theme .qr-modal h2{color:#edf4f7!important}
+.dark-theme .modal-head p,.dark-theme .modal-footer span{color:#8ea2ad!important}
+.dark-theme .customer-facts>div{background:#10232b!important}
+.dark-theme .link-row{background:#0d1822!important;border-color:#20303d!important;color:#edf4f7!important}
+.dark-theme .knowledge-card p,.dark-theme .knowledge-note p{color:#aebfc6!important}
+.dark-theme .knowledge-note{background:#0d2522!important;border-color:#245a50!important}
+.dark-theme .primary-link{color:#91ead5!important}
+.dark-theme .scraper-launch,.dark-theme .scraper-source-card,.dark-theme .scrape-preview-card{background:#0d1822!important;border-color:#20303d!important;color:#edf4f7!important}
+.dark-theme .scraper-launch small,.dark-theme .scraper-source-card small,.dark-theme .scrape-file-row small,.dark-theme .scrape-progress p,.dark-theme .scrape-field-note{color:#8ea2ad!important}
+.dark-theme .scraper-source-icon{background:#12352f!important;color:#91ead5!important}
+.dark-theme .scrape-progress,.dark-theme .scrape-photo-card,.dark-theme .scrape-source-note{background:#0d1822!important;border-color:#20303d!important;color:#aebfc6!important}
+.dark-theme .scrape-warning{background:#2a2110!important;color:#ffc875!important}
+.dark-theme .comparison-disclaimer{background:#10232b!important}
+.dark-theme .portfolio-outline,.dark-theme .designer-settings{background:#0d1822!important;border-color:#20303d!important;color:#edf4f7!important}
+.dark-theme .outline-item{border-color:#20303d!important}
+.dark-theme .outline-item small,.dark-theme .outline-head{color:#8ea2ad!important}
+.dark-theme .outline-buttons button{background:#0d1822!important;border-color:#263a46!important;color:#edf4f7!important}
+.dark-theme .portfolio-editor{background:#172126!important}
+.dark-theme .portfolio-editor .cover,.dark-theme .portfolio-editor .application,.dark-theme .portfolio-editor .closing{background:#fff!important;color:#18262d!important}
+.dark-theme .portfolio-editor .cover-dark{background:#15252b!important;color:#fff!important}
+.dark-theme .qr-code-box{background:#fff!important;border-color:#2a3d49!important}
+.dark-theme .advanced{background:#08131c!important;border-color:#20303d!important;color:#edf4f7!important}
+.dark-theme .home-command-grid .command-card,.dark-theme .application-card,.dark-theme .application-story{background:#0d1822!important;border-color:#20303d!important}
+.dark-theme .discover-empty{background:#0d1822!important;border-color:#29404d!important;color:#edf4f7!important}
+.dark-theme .discover-empty p{color:#8ea2ad!important}
+.dark-theme .admin-stat{background:#0d1822!important;border-color:#20303d!important;color:#edf4f7!important}
+.dark-theme .admin-stat small{color:#8ea2ad!important}
+.dark-theme .oem-reference-card{background:#0d1822!important;border-color:#20303d!important;color:#edf4f7!important}
+.dark-theme .oem-reference-card *{border-color:inherit}
+.dark-theme .oem-detail-grid>div{color:#edf4f7!important}
+.dark-theme .oem-detail-grid small,.dark-theme .oem-detail-notes p{color:#aebfc6!important}
+.dark-theme .oem-detail-modal .form-actions .secondary{background:#0d1822!important;color:#edf4f7!important;border-color:#263a46!important}
